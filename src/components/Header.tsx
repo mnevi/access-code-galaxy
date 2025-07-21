@@ -30,10 +30,17 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center space-x-3">
-          <Button variant="outline" className="hidden sm:inline-flex">
+          <Button 
+            variant="outline" 
+            className="hidden sm:inline-flex"
+            onClick={() => window.location.href = '/auth'}
+          >
             Sign In
           </Button>
-          <Button className="btn-hero">
+          <Button 
+            className="btn-hero"
+            onClick={() => window.location.href = '/auth'}
+          >
             Get Started
           </Button>
         </div>

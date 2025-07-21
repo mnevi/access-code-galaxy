@@ -14,7 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      challenge_progress: {
+        Row: {
+          challenge_id: string
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          progress: number | null
+          updated_at: string
+          user_id: string
+          xp_earned: number | null
+        }
+        Insert: {
+          challenge_id: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          progress?: number | null
+          updated_at?: string
+          user_id: string
+          xp_earned?: number | null
+        }
+        Update: {
+          challenge_id?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          progress?: number | null
+          updated_at?: string
+          user_id?: string
+          xp_earned?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          accessibility_mode: string | null
+          avatar_url: string | null
+          created_at: string
+          current_streak: number | null
+          display_name: string | null
+          id: string
+          updated_at: string
+          username: string | null
+          xp_points: number | null
+        }
+        Insert: {
+          accessibility_mode?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          current_streak?: number | null
+          display_name?: string | null
+          id: string
+          updated_at?: string
+          username?: string | null
+          xp_points?: number | null
+        }
+        Update: {
+          accessibility_mode?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          current_streak?: number | null
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          username?: string | null
+          xp_points?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

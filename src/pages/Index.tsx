@@ -139,7 +139,11 @@ const Index = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="btn-hero">
+                <Button 
+                  size="lg" 
+                  className="btn-hero"
+                  onClick={() => window.location.href = '/auth'}
+                >
                   Start Learning
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -340,7 +344,11 @@ const Index = () => {
               Join thousands of learners who are mastering programming with our accessible platform
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button size="lg" variant="secondary">
+              <Button 
+                size="lg" 
+                variant="secondary"
+                onClick={() => window.location.href = '/auth'}
+              >
                 Create Free Account
               </Button>
               <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
