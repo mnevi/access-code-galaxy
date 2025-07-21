@@ -246,7 +246,11 @@ const Index = () => {
 
           {selectedMode && (
             <div className="text-center animate-bounce-in">
-              <Button size="lg" className="btn-success">
+              <Button
+                size="lg"
+                className="btn-success"
+                onClick={() => window.location.href = '/challenge'}
+              >
                 Continue with {accessibilityModes.find(m => m.id === selectedMode)?.title}
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
