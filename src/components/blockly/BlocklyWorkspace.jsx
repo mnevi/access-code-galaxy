@@ -9,6 +9,7 @@ import { useChallengeProgress } from '../../hooks/useChallengeProgress';
 import { ChallengeService } from '../../services/challengeService';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
 import AccessibilityControls from './AccessibilityControls';
+import VoiceCommands from './VoiceCommands';
 import { useScreenReader } from '../../hooks/useScreenReader';
 import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation';
 import { useHapticFeedback, useAccessibilityHaptics } from '../../hooks/useHapticFeedback';
@@ -333,6 +334,48 @@ const generators = {
     }
   };
 
+  // Function to place a block via voice command
+  const placeBlockViaVoice = (blockType) => {
+    const workspace = workspaceRef.current;
+    if (!workspace) return;
+
+    try {
+      // Create the block
+      const block = workspace.newBlock(blockType);
+      
+      // Position the block in the center of the workspace
+      const metrics = workspace.getMetrics();
+      const x = metrics.viewLeft + (metrics.viewWidth / 2) - 100;
+      const y = metrics.viewTop + (metrics.viewHeight / 2) - 50;
+      
+      block.moveBy(x, y);
+      block.initSvg();
+      block.render();
+      
+      // Generate code after placing block
+      generateCode(language);
+      
+      // Provide accessibility feedback
+      if (features.screenReader) {
+        screenReader.announceBlockCreated(blockType);
+      }
+      if (features.audioDescriptions && isAudioEnabled) {
+        audioDescriptions.speak(`Placed ${blockType} block`, 'medium');
+      }
+      if (features.tactileFeedback) {
+        hapticFeedback.onBlockAction('create');
+      }
+      
+      console.log(`Voice command placed block: ${blockType}`);
+      
+    } catch (error) {
+      console.error('Error placing block via voice:', error);
+      if (features.audioDescriptions && isAudioEnabled) {
+        audioDescriptions.describeError('Failed to place block');
+      }
+    }
+  };
+
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
@@ -414,6 +457,10 @@ const generators = {
             onAudioToggle={handleAudioToggle}
             isAudioEnabled={isAudioEnabled}
           />
+          <VoiceCommands 
+            onPlaceBlock={placeBlockViaVoice}
+            enabled={features.voiceCommands || currentMode?.id === 'motor'}
+          />
           <div className="header-controls">
             <button
               className="clear-btn"
@@ -432,7 +479,7 @@ const generators = {
             <button onClick={handleRun} className="run-btn">Run</button>
             <button onClick={handleClear} className="clear-btn">Clear</button>
             {/* Voice button only shows if not using accessibility controls */}
-            {!features.voiceCommands && (
+            {!features.voiceCommands && currentMode?.id !== 'motor' && (
               <button
                   onClick={handleVoiceToggle}
                   className="voice-btn"
