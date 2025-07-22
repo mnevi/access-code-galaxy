@@ -99,6 +99,76 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
   
   const languages = ['python', 'javascript', 'lua', 'php', 'dart'];
   const currentLangIndex = languages.indexOf(language);
+
+  const languageNames = {
+    python: 'Python',
+    javascript: 'JavaScript',
+    lua: 'Lua',
+    php: 'PHP',
+    dart: 'Dart',
+  };
+
+  const commentStyles = {
+    python: '#',
+    javascript: '//',
+    lua: '--',
+    php: '//',
+    dart: '//',
+  };
+
+  const handleRun = async () => {
+    hapticFeedback.onUIInteraction('button');
+    
+    if (
+        code.includes('No blocks in workspace') ||
+        code.includes('Workspace cleared') ||
+        code.trim() === ''
+    ) {
+      const errorMsg = 'Please create some blocks before running';
+      alert(errorMsg);
+      screenReader.announceError('No blocks to run');
+      audioDescriptions.describeError('No blocks to run');
+      hapticFeedback.onWorkspaceAction('error');
+      return;
+    }
+
+    setOutput('Running...');
+    screenReader.announce('Running code');
+    audioDescriptions.speak('Running code', 'medium');
+    hapticFeedback.onWorkspaceAction('run');
+
+    try {
+      const response = await fetch('http://localhost:5000/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await response.json();
+      setOutput(data.output);
+      screenReader.announceSuccess('Code executed successfully');
+      audioDescriptions.describeSuccess('Code executed successfully');
+    } catch (err) {
+      const errorMsg = `Error: ${err.message}`;
+      setOutput(errorMsg);
+      screenReader.announceError(`Execution error: ${err.message}`);
+      audioDescriptions.describeError(`Execution error: ${err.message}`);
+      hapticFeedback.onWorkspaceAction('error');
+    }
+  };
+
+  const handleClear = () => {
+    hapticFeedback.onUIInteraction('button');
+    
+    if (window.confirm('Clear all blocks?')) {
+      workspaceRef.current.clear();
+      setCode(`${commentStyles[language]} Workspace cleared\n${commentStyles[language]} Drag blocks to get started`);
+      setOutput('');
+      screenReader.announceWorkspaceAction('cleared');
+      audioDescriptions.describeWorkspace(workspaceRef.current);
+      hapticFeedback.onWorkspaceAction('clear');
+    }
+  };
   
   const switchLanguage = (direction) => {
     let newIndex;
@@ -123,21 +193,6 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
     onLanguageChange: switchLanguage
   });
 
-  const languageNames = {
-    python: 'Python',
-    javascript: 'JavaScript',
-    lua: 'Lua',
-    php: 'PHP',
-    dart: 'Dart',
-  };
-
-  const commentStyles = {
-    python: '#',
-    javascript: '//',
-    lua: '--',
-    php: '//',
-    dart: '//',
-  };
 
   useEffect(() => {
     languageRef.current = language;
@@ -267,59 +322,6 @@ const generators = {
     }
   };
 
-  const handleRun = async () => {
-    hapticFeedback.onUIInteraction('button');
-    
-    if (
-        code.includes('No blocks in workspace') ||
-        code.includes('Workspace cleared') ||
-        code.trim() === ''
-    ) {
-      const errorMsg = 'Please create some blocks before running';
-      alert(errorMsg);
-      screenReader.announceError('No blocks to run');
-      audioDescriptions.describeError('No blocks to run');
-      hapticFeedback.onWorkspaceAction('error');
-      return;
-    }
-
-    setOutput('Running...');
-    screenReader.announce('Running code');
-    audioDescriptions.speak('Running code', 'medium');
-    hapticFeedback.onWorkspaceAction('run');
-
-    try {
-      const response = await fetch('http://localhost:5000/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      });
-
-      const data = await response.json();
-      setOutput(data.output);
-      screenReader.announceSuccess('Code executed successfully');
-      audioDescriptions.describeSuccess('Code executed successfully');
-    } catch (err) {
-      const errorMsg = `Error: ${err.message}`;
-      setOutput(errorMsg);
-      screenReader.announceError(`Execution error: ${err.message}`);
-      audioDescriptions.describeError(`Execution error: ${err.message}`);
-      hapticFeedback.onWorkspaceAction('error');
-    }
-  };
-
-  const handleClear = () => {
-    hapticFeedback.onUIInteraction('button');
-    
-    if (window.confirm('Clear all blocks?')) {
-      workspaceRef.current.clear();
-      setCode(`${commentStyles[language]} Workspace cleared\n${commentStyles[language]} Drag blocks to get started`);
-      setOutput('');
-      screenReader.announceWorkspaceAction('cleared');
-      audioDescriptions.describeWorkspace(workspaceRef.current);
-      hapticFeedback.onWorkspaceAction('clear');
-    }
-  };
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
