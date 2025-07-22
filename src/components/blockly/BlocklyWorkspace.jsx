@@ -4,11 +4,15 @@ import * as BlocklyPython from 'blockly/python';
 import * as BlocklyJavaScript from 'blockly/javascript';
 import './BlocklyWorkspace.css';
 import * as BlocklyUtils from './blocklyUtils';
-import { toggleVoiceRecognition } from './voiceControl';
+import { initializeVoiceRecognition, toggleVoiceRecognition, isVoiceActive, cleanup } from './voiceControl';
 import { useChallengeProgress } from '../../hooks/useChallengeProgress';
 import { ChallengeService } from '../../services/challengeService';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
 import AccessibilityControls from './AccessibilityControls';
+import { useScreenReader } from '../../hooks/useScreenReader';
+import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation';
+import { useHapticFeedback, useAccessibilityHaptics } from '../../hooks/useHapticFeedback';
+import { useAudioDescriptions } from '../../hooks/useAudioDescriptions';
 
 
 const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
@@ -72,8 +76,52 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
   const [language, setLanguage] = useState('python');
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
-  const [isVoiceOn, setIsVoiceOn] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [challenge, setChallenge] = useState(null);
   const languageRef = useRef(language);
+  
+  // Initialize accessibility hooks
+  const screenReader = useScreenReader({
+    enabled: features.screenReader || false,
+    announceBlockChanges: true,
+    announceWorkspaceChanges: true,
+    announceProgress: true
+  });
+  
+  const hapticFeedback = useAccessibilityHaptics(features.tactileFeedback || false);
+  
+  const audioDescriptions = useAudioDescriptions({
+    enabled: features.audioDescriptions || false,
+    rate: 1,
+    pitch: 1,
+    volume: 0.8
+  });
+  
+  const languages = ['python', 'javascript', 'lua', 'php', 'dart'];
+  const currentLangIndex = languages.indexOf(language);
+  
+  const switchLanguage = (direction) => {
+    let newIndex;
+    if (direction === 'next') {
+      newIndex = (currentLangIndex + 1) % languages.length;
+    } else {
+      newIndex = currentLangIndex === 0 ? languages.length - 1 : currentLangIndex - 1;
+    }
+    const newLanguage = languages[newIndex];
+    setLanguage(newLanguage);
+    generateCode(newLanguage);
+    screenReader.announce(`Switched to ${languageNames[newLanguage]}`);
+    audioDescriptions.describeLanguageChange(languageNames[newLanguage]);
+    hapticFeedback.onUIInteraction('switch');
+  };
+  
+  useKeyboardNavigation({
+    enabled: features.keyboardNavigation || false,
+    workspace: workspaceRef.current,
+    onRun: handleRun,
+    onClear: handleClear,
+    onLanguageChange: switchLanguage
+  });
 
   const languageNames = {
     python: 'Python',
@@ -135,9 +183,36 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
 
       window.blocklyWorkspace = workspaceRef.current;
       window.BlocklyUtils = BlocklyUtils;
+      
+      // Initialize voice recognition if enabled
+      if (features.voiceCommands) {
+        const voiceInitialized = initializeVoiceRecognition(workspaceRef.current, BlocklyUtils);
+        if (voiceInitialized) {
+          screenReader.announce('Voice commands available');
+        }
+      }
 
-      workspaceRef.current.addChangeListener(() => {
+      workspaceRef.current.addChangeListener((event) => {
         generateCode(languageRef.current);
+        
+        // Provide accessibility feedback for block changes
+        if (event.type === Blockly.Events.BLOCK_CREATE) {
+          screenReader.announceBlockAction('Created', event.blockType || 'block');
+          hapticFeedback.onBlockInteraction('create');
+          if (features.audioDescriptions) {
+            const block = workspaceRef.current.getBlockById(event.blockId);
+            if (block) {
+              audioDescriptions.describeBlock(block);
+            }
+          }
+        } else if (event.type === Blockly.Events.BLOCK_DELETE) {
+          screenReader.announceBlockAction('Deleted', event.blockType || 'block');
+          hapticFeedback.onBlockInteraction('delete');
+        } else if (event.type === Blockly.Events.BLOCK_MOVE && event.newParentId) {
+          screenReader.announceBlockAction('Connected', event.blockType || 'block');
+          hapticFeedback.onBlockInteraction('connect');
+        }
+        
         // Debounce evaluation to avoid too many calls
         clearTimeout(window.evaluationTimeout);
         window.evaluationTimeout = setTimeout(() => {
@@ -156,6 +231,8 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
         window.blocklyWorkspace = null;
         window.BlocklyUtils = null;
       }
+      // Cleanup voice recognition
+      cleanup();
     };
   }, []);
 
@@ -191,16 +268,25 @@ const generators = {
   };
 
   const handleRun = async () => {
+    hapticFeedback.onUIInteraction('button');
+    
     if (
         code.includes('No blocks in workspace') ||
         code.includes('Workspace cleared') ||
         code.trim() === ''
     ) {
-      alert('Please create some blocks before running');
+      const errorMsg = 'Please create some blocks before running';
+      alert(errorMsg);
+      screenReader.announceError('No blocks to run');
+      audioDescriptions.describeError('No blocks to run');
+      hapticFeedback.onWorkspaceAction('error');
       return;
     }
 
     setOutput('Running...');
+    screenReader.announce('Running code');
+    audioDescriptions.speak('Running code', 'medium');
+    hapticFeedback.onWorkspaceAction('run');
 
     try {
       const response = await fetch('http://localhost:5000/run', {
@@ -211,16 +297,27 @@ const generators = {
 
       const data = await response.json();
       setOutput(data.output);
+      screenReader.announceSuccess('Code executed successfully');
+      audioDescriptions.describeSuccess('Code executed successfully');
     } catch (err) {
-      setOutput(`Error: ${err.message}`);
+      const errorMsg = `Error: ${err.message}`;
+      setOutput(errorMsg);
+      screenReader.announceError(`Execution error: ${err.message}`);
+      audioDescriptions.describeError(`Execution error: ${err.message}`);
+      hapticFeedback.onWorkspaceAction('error');
     }
   };
 
   const handleClear = () => {
+    hapticFeedback.onUIInteraction('button');
+    
     if (window.confirm('Clear all blocks?')) {
       workspaceRef.current.clear();
       setCode(`${commentStyles[language]} Workspace cleared\n${commentStyles[language]} Drag blocks to get started`);
       setOutput('');
+      screenReader.announceWorkspaceAction('cleared');
+      audioDescriptions.describeWorkspace(workspaceRef.current);
+      hapticFeedback.onWorkspaceAction('clear');
     }
   };
 
@@ -228,7 +325,56 @@ const generators = {
     const newLang = e.target.value;
     setLanguage(newLang);
     generateCode(newLang);
+    screenReader.announce(`Switched to ${languageNames[newLang]}`);
+    audioDescriptions.describeLanguageChange(languageNames[newLang]);
+    hapticFeedback.onUIInteraction('switch');
   };
+  
+  const handleVoiceToggle = () => {
+    if (!features.voiceCommands) return;
+    
+    const newVoiceState = toggleVoiceRecognition();
+    setIsVoiceEnabled(newVoiceState);
+    
+    if (newVoiceState) {
+      screenReader.announce('Voice commands activated');
+      audioDescriptions.speak('Voice commands activated', 'high');
+    } else {
+      screenReader.announce('Voice commands deactivated');
+      audioDescriptions.speak('Voice commands deactivated', 'medium');
+    }
+    hapticFeedback.onUIInteraction('switch');
+  };
+  
+  // Load challenge data
+  useEffect(() => {
+    if (challengeId) {
+      const challengeData = ChallengeService.getChallengeById(challengeId);
+      setChallenge(challengeData);
+    }
+  }, [challengeId]);
+  
+  // Provide audio description of challenge when component loads
+  useEffect(() => {
+    if (challenge && features.audioDescriptions) {
+      setTimeout(() => {
+        audioDescriptions.describeChallenge(challenge, currentProgress);
+      }, 1000);
+    }
+  }, [challenge, features.audioDescriptions, audioDescriptions, currentProgress]);
+  
+  // Announce progress changes
+  useEffect(() => {
+    if (features.screenReader && currentProgress > 0) {
+      screenReader.announceProgress(currentProgress, challenge?.title);
+    }
+    if (features.audioDescriptions) {
+      audioDescriptions.describeProgress(currentProgress, isCompleted);
+    }
+    if (features.tactileFeedback) {
+      hapticFeedback.onProgressUpdate(isCompleted, currentProgress % 25 === 0 && currentProgress > 0);
+    }
+  }, [currentProgress, isCompleted, features, screenReader, audioDescriptions, hapticFeedback, challenge]);
 
   return (
       <div className={`container ${currentMode ? `mode-${currentMode.id}` : ''} ${features.reducedMotion ? 'reduced-motion' : ''}`}>
@@ -250,11 +396,8 @@ const generators = {
             )}
           </div>
           <AccessibilityControls 
-            onVoiceToggle={() => {
-              toggleVoiceRecognition(window.blocklyWorkspace, window.BlocklyUtils);
-              setIsVoiceOn(!isVoiceOn);
-            }}
-            isVoiceActive={isVoiceOn}
+            onVoiceToggle={handleVoiceToggle}
+            isVoiceActive={isVoiceEnabled}
           />
           <div className="header-controls">
             <button
@@ -276,13 +419,10 @@ const generators = {
             {/* Voice button only shows if not using accessibility controls */}
             {!features.voiceCommands && (
               <button
-                  onClick={() => {
-                    toggleVoiceRecognition(window.blocklyWorkspace, window.BlocklyUtils);
-                    setIsVoiceOn(!isVoiceOn);
-                  }}
+                  onClick={handleVoiceToggle}
                   className="voice-btn"
               >
-                Voice Mode <span className="voice-icon">{isVoiceOn ? '✅' : '❌'}</span>
+                Voice Mode <span className="voice-icon">{isVoiceEnabled ? '✅' : '❌'}</span>
               </button>
             )}
           </div>
