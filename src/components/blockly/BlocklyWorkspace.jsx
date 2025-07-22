@@ -103,7 +103,7 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
     }
 
     if (blocklyDiv.current && !workspaceRef.current) {
-      // Configure workspace options based on accessibility mode
+      // Configure workspace options - using only built-in options
       const workspaceOptions = {
         toolbox: toolboxXml,
         scrollbars: true,
@@ -121,8 +121,7 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
           minScale: 0.5,
           scaleSpeed: 1.2,
         },
-        theme: features.highContrast ? 'high_contrast' : 'classic',
-        renderer: features.simplifiedUI ? 'minimalist' : 'geras',
+        // Remove custom theme and renderer that don't exist
         sounds: features.audioDescriptions || false,
         grid: {
           spacing: features.largeText ? 30 : 20,
