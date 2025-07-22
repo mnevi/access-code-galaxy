@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
-import { Mic, MicOff, Volume2, HelpCircle } from 'lucide-react';
+import { useHuggingFaceVoiceRecognition } from '@/hooks/useHuggingFaceVoiceRecognition';
+import { Mic, MicOff, Volume2, HelpCircle, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface VoiceCommandsProps {
   onPlaceBlock: (blockType: string) => void;
@@ -12,28 +14,35 @@ interface VoiceCommandsProps {
 
 const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) => {
   const [showHelp, setShowHelp] = useState(false);
+  const [voiceProvider, setVoiceProvider] = useState<'openai' | 'huggingface'>('huggingface');
 
   const handleVoiceCommand = (blockType: string, text: string) => {
     console.log(`Voice command received: ${text} -> ${blockType}`);
     onPlaceBlock(blockType);
   };
 
-  const { 
-    isListening, 
-    isProcessing, 
-    startListening, 
-    stopListening, 
-    availableCommands 
-  } = useVoiceRecognition({
+  // OpenAI Voice Recognition
+  const openaiVoice = useVoiceRecognition({
     onCommand: handleVoiceCommand,
-    enabled
+    enabled: enabled && voiceProvider === 'openai'
   });
+
+  // Hugging Face Voice Recognition
+  const huggingfaceVoice = useHuggingFaceVoiceRecognition({
+    onCommand: handleVoiceCommand,
+    enabled: enabled && voiceProvider === 'huggingface'
+  });
+
+  // Get current voice recognition instance
+  const currentVoice = voiceProvider === 'openai' ? openaiVoice : huggingfaceVoice;
 
   if (!enabled) return null;
 
   const getButtonState = () => {
-    if (isProcessing) return { text: 'Processing...', icon: <Volume2 className="h-4 w-4 animate-pulse" /> };
-    if (isListening) return { text: 'Listening...', icon: <Mic className="h-4 w-4 text-red-500 animate-pulse" /> };
+    if (currentVoice.isProcessing || (voiceProvider === 'huggingface' && huggingfaceVoice.isModelLoading)) {
+      return { text: voiceProvider === 'huggingface' && huggingfaceVoice.isModelLoading ? 'Loading Model...' : 'Processing...', icon: <Volume2 className="h-4 w-4 animate-pulse" /> };
+    }
+    if (currentVoice.isListening) return { text: 'Listening...', icon: <Mic className="h-4 w-4 text-red-500 animate-pulse" /> };
     return { text: 'Voice Commands', icon: <MicOff className="h-4 w-4" /> };
   };
 
@@ -41,11 +50,21 @@ const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) 
 
   return (
     <div className="flex items-center gap-2">
+      <Select value={voiceProvider} onValueChange={(value: 'openai' | 'huggingface') => setVoiceProvider(value)}>
+        <SelectTrigger className="w-[140px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="huggingface">🤗 Hugging Face</SelectItem>
+          <SelectItem value="openai">🤖 OpenAI</SelectItem>
+        </SelectContent>
+      </Select>
+      
       <Button
-        variant={isListening ? "destructive" : "outline"}
+        variant={currentVoice.isListening ? "destructive" : "outline"}
         size="sm"
-        onClick={isListening ? stopListening : startListening}
-        disabled={isProcessing}
+        onClick={currentVoice.isListening ? currentVoice.stopListening : currentVoice.startListening}
+        disabled={currentVoice.isProcessing || (voiceProvider === 'huggingface' && huggingfaceVoice.isModelLoading)}
         className="min-w-[140px]"
       >
         {buttonState.icon}
