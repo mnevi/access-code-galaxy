@@ -70,6 +70,21 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
     
     console.log('🎤 Voice transcription received:', text);
     console.log('🔍 Processed text for matching:', lowerText);
+    
+    // Filter out non-speech transcriptions
+    const nonSpeechPatterns = [
+      /\[.*?\]/,  // [Sigh], [SOUND], [Music], etc.
+      /^\s*$/,    // Empty or whitespace only
+      /^(sigh|breath|breathing|sound|music|noise)s?$/i
+    ];
+    
+    for (const pattern of nonSpeechPatterns) {
+      if (pattern.test(lowerText)) {
+        console.log('🚫 Non-speech detected, ignoring:', lowerText);
+        return null;
+      }
+    }
+    
     console.log('📋 Available commands:', Object.keys(blockCommands));
     
     // Check for direct block commands
@@ -215,9 +230,15 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
               description: `Placing ${parsedCommand.command} block`,
             });
           } else {
+            // Check if it was non-speech
+            const isNonSpeech = /\[.*?\]/.test(transcription) || 
+                               /^(sigh|breath|breathing|sound|music|noise)s?$/i.test(transcription.toLowerCase().trim());
+            
             toast({
-              title: "Command Not Recognized",
-              description: `Try saying "place print" or "add if block"`,
+              title: isNonSpeech ? "Please Speak Clearly" : "Command Not Recognized",
+              description: isNonSpeech 
+                ? "The microphone detected background noise. Try speaking directly into the mic."
+                : `Try saying "place print" or "add if block". Heard: "${transcription}"`,
               variant: "destructive",
             });
           }
