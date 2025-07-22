@@ -7,6 +7,7 @@ import ChallengeCard from "@/components/ChallengeCard";
 import StatsCard from "@/components/StatsCard";
 import { ChallengeService } from "@/services/challengeService";
 import { supabase } from "@/integrations/supabase/client";
+import { useAccessibility, accessibilityModes } from "@/contexts/AccessibilityContext";
 import { 
   Zap, 
   Trophy, 
@@ -30,8 +31,9 @@ const Index = () => {
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [challenges, setChallenges] = useState([]);
   const [userStats, setUserStats] = useState({ xpPoints: 0, challengesCompleted: 0, currentStreak: 0 });
+  const { setMode } = useAccessibility();
 
-  const accessibilityModes = [
+  const uiAccessibilityModes = [
     {
       id: "neurodivergent",
       title: "Neurodivergent",
@@ -81,6 +83,21 @@ const Index = () => {
       ]
     }
   ];
+
+  const handleModeSelection = (modeId: string) => {
+    const newSelectedMode = modeId === selectedMode ? null : modeId;
+    setSelectedMode(newSelectedMode);
+    
+    // Set accessibility mode in context using context modes
+    if (newSelectedMode) {
+      const contextMode = accessibilityModes.find(m => m.id === newSelectedMode);
+      if (contextMode) {
+        setMode(contextMode);
+      }
+    } else {
+      setMode(null);
+    }
+  };
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -303,7 +320,7 @@ const Index = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {accessibilityModes.map((mode) => (
+            {uiAccessibilityModes.map((mode) => (
               <AccessibilityModeCard
                 key={mode.id}
                 title={mode.title}
@@ -311,7 +328,7 @@ const Index = () => {
                 icon={mode.icon}
                 features={mode.features}
                 isSelected={selectedMode === mode.id}
-                onClick={() => setSelectedMode(mode.id === selectedMode ? null : mode.id)}
+                onClick={() => handleModeSelection(mode.id)}
               />
             ))}
           </div>
@@ -323,7 +340,7 @@ const Index = () => {
                 className="btn-success"
                 onClick={() => window.location.href = '/challenge'}
               >
-                Continue with {accessibilityModes.find(m => m.id === selectedMode)?.title}
+                Continue with {uiAccessibilityModes.find(m => m.id === selectedMode)?.title}
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
             </div>

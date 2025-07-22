@@ -284,4 +284,111 @@ h1 {
     background: linear-gradient(90deg, #34495e 0%, #2c3e50 100%);
 }
 
+/* Accessibility Mode Styles */
+.accessibility-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+.accessibility-mode-indicator .mode-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.accessibility-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.accessibility-buttons .active {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+
+/* Mode-specific styles */
+.mode-visual {
+  filter: contrast(1.5);
+}
+
+.mode-visual .workspace-panel,
+.mode-visual .output-panel {
+  border: 3px solid #ffffff;
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+.mode-visual #codeOutput,
+.mode-visual #programOutput {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff;
+}
+
+.mode-neurodivergent {
+  --animation-duration: 0s;
+}
+
+.mode-neurodivergent .workspace-panel {
+  border: 2px solid #2196f3;
+  border-radius: 12px;
+}
+
+.mode-neurodivergent .header-controls {
+  gap: 20px;
+}
+
+.mode-hearing .workspace-panel,
+.mode-hearing .output-panel {
+  border: 3px solid #ff9800;
+  box-shadow: 0 0 15px rgba(255, 152, 0, 0.3);
+}
+
+.mode-motor .header-controls button {
+  padding: 15px 25px;
+  font-size: 16px;
+  min-height: 50px;
+}
+
+.mode-motor .language-select {
+  padding: 15px 20px;
+  font-size: 16px;
+  min-height: 50px;
+}
+
+/* Reduced motion for neurodivergent mode */
+.reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Large text mode */
+.large-text #codeOutput,
+.large-text #programOutput {
+  font-size: 18px !important;
+  line-height: 1.8;
+}
+
+/* Simplified UI */
+.simplified .workspace-header,
+.simplified .output-header {
+  background: #2196f3 !important;
+  font-size: 14px;
+}
+
+.simplified .header-controls {
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* ...existing code above... */

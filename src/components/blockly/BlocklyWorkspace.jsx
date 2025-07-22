@@ -7,11 +7,14 @@ import * as BlocklyUtils from './blocklyUtils';
 import { toggleVoiceRecognition } from './voiceControl';
 import { useChallengeProgress } from '../../hooks/useChallengeProgress';
 import { ChallengeService } from '../../services/challengeService';
+import { useAccessibility } from '../../contexts/AccessibilityContext';
+import AccessibilityControls from './AccessibilityControls';
 
 
 const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
   const blocklyDiv = useRef(null);
   const { currentProgress, isCompleted, isEvaluating, evaluateWorkspace } = useChallengeProgress(challengeId);
+  const { currentMode, features } = useAccessibility();
   // Define the toolbox XML as a string
   const toolboxXml = `
     <xml>
@@ -100,7 +103,8 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
     }
 
     if (blocklyDiv.current && !workspaceRef.current) {
-      workspaceRef.current = Blockly.inject(blocklyDiv.current, {
+      // Configure workspace options based on accessibility mode
+      const workspaceOptions = {
         toolbox: toolboxXml,
         scrollbars: true,
         trashcan: true,
@@ -109,7 +113,26 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
           drag: true,
           wheel: true,
         },
-      });
+        zoom: {
+          controls: true,
+          wheel: true,
+          startScale: features.largeText ? 1.2 : 1.0,
+          maxScale: features.largeText ? 3.0 : 2.0,
+          minScale: 0.5,
+          scaleSpeed: 1.2,
+        },
+        theme: features.highContrast ? 'high_contrast' : 'classic',
+        renderer: features.simplifiedUI ? 'minimalist' : 'geras',
+        sounds: features.audioDescriptions || false,
+        grid: {
+          spacing: features.largeText ? 30 : 20,
+          length: 3,
+          colour: features.highContrast ? '#ffffff' : '#ccc',
+          snap: true,
+        },
+      };
+
+      workspaceRef.current = Blockly.inject(blocklyDiv.current, workspaceOptions);
 
       window.blocklyWorkspace = workspaceRef.current;
       window.BlocklyUtils = BlocklyUtils;
@@ -209,7 +232,7 @@ const generators = {
   };
 
   return (
-      <div className="container">
+      <div className={`container ${currentMode ? `mode-${currentMode.id}` : ''} ${features.reducedMotion ? 'reduced-motion' : ''}`}>
         <div className="header">
           <div className="challenge-info">
             <h1>Blockly Accessibility Coding Platform</h1>
@@ -227,6 +250,13 @@ const generators = {
               </div>
             )}
           </div>
+          <AccessibilityControls 
+            onVoiceToggle={() => {
+              toggleVoiceRecognition(window.blocklyWorkspace, window.BlocklyUtils);
+              setIsVoiceOn(!isVoiceOn);
+            }}
+            isVoiceActive={isVoiceOn}
+          />
           <div className="header-controls">
             <button
               className="clear-btn"
@@ -244,37 +274,54 @@ const generators = {
             </select>
             <button onClick={handleRun} className="run-btn">Run</button>
             <button onClick={handleClear} className="clear-btn">Clear</button>
-            <button
-                onClick={() => {
-                  toggleVoiceRecognition(window.blocklyWorkspace, window.BlocklyUtils);
-                  setIsVoiceOn(!isVoiceOn);
-                }}
-                className="voice-btn"
-            >
-              Voice Mode <span className="voice-icon">{isVoiceOn ? '✅' : '❌'}</span>
-            </button>
+            {/* Voice button only shows if not using accessibility controls */}
+            {!features.voiceCommands && (
+              <button
+                  onClick={() => {
+                    toggleVoiceRecognition(window.blocklyWorkspace, window.BlocklyUtils);
+                    setIsVoiceOn(!isVoiceOn);
+                  }}
+                  className="voice-btn"
+              >
+                Voice Mode <span className="voice-icon">{isVoiceOn ? '✅' : '❌'}</span>
+              </button>
+            )}
           </div>
         </div>
 
         <div className="content">
-          <div className="workspace-panel">
+          <div className={`workspace-panel ${features.simplifiedUI ? 'simplified' : ''}`}>
             <div className="workspace-header">Blockly Workspace</div>
             <div className="blockly-container">
               <div ref={blocklyDiv} id="blocklyDiv"></div>
             </div>
           </div>
 
-          <div className="output-panel">
+          <div className={`output-panel ${features.largeText ? 'large-text' : ''}`}>
             <div className="output-header">
               <span>Generated Code</span>
               <span className="status">{languageNames[language]}</span>
             </div>
-            <textarea readOnly value={code} id="codeOutput" rows="10"></textarea>
+            <textarea 
+              readOnly 
+              value={code} 
+              id="codeOutput" 
+              rows="10"
+              style={{ fontSize: features.largeText ? '18px' : '14px' }}
+              aria-live={features.screenReader ? 'polite' : 'off'}
+            ></textarea>
 
             <div className="output-header output">
               <span>Program Output</span>
             </div>
-            <textarea readOnly value={output} id="programOutput" rows="6"></textarea>
+            <textarea 
+              readOnly 
+              value={output} 
+              id="programOutput" 
+              rows="6"
+              style={{ fontSize: features.largeText ? '18px' : '14px' }}
+              aria-live={features.screenReader ? 'assertive' : 'off'}
+            ></textarea>
           </div>
         </div>
 
