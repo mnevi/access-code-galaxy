@@ -50,10 +50,11 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
         {/* Voice Commands for Motor Impairment */}
         {features.voiceCommands && (
           <Button
-            variant="outline"
+            variant="accessibility"
             size="sm"
             onClick={onVoiceToggle}
-            className={`voice-control ${isVoiceActive ? 'active' : ''}`}
+            data-active={isVoiceActive}
+            className={`voice-control gap-2 ${isVoiceActive ? 'bg-primary text-primary-foreground border-primary' : ''}`}
             aria-label={`${isVoiceActive ? 'Disable' : 'Enable'} voice commands`}
           >
             {isVoiceActive ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
@@ -64,14 +65,15 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
         {/* Audio Descriptions for Visual Impairment */}
         {features.audioDescriptions && (
           <Button
-            variant="outline"
+            variant="accessibility"
             size="sm"
             onClick={() => {
               const newState = !audioEnabled;
               setAudioEnabled(newState);
               onAudioToggle?.(newState);
             }}
-            className={`audio-control ${audioEnabled ? 'active' : ''}`}
+            data-active={audioEnabled}
+            className={`audio-control gap-2 ${audioEnabled ? 'bg-primary text-primary-foreground border-primary' : ''}`}
             aria-label={`${audioEnabled ? 'Disable' : 'Enable'} audio descriptions`}
           >
             {audioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
@@ -82,10 +84,11 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
         {/* Screen Reader Mode for Visual Impairment */}
         {features.screenReader && (
           <Button
-            variant="outline"
+            variant="accessibility"
             size="sm"
             onClick={() => setScreenReaderMode(!screenReaderMode)}
-            className={`screen-reader-control ${screenReaderMode ? 'active' : ''}`}
+            data-active={screenReaderMode}
+            className={`screen-reader-control gap-2 ${screenReaderMode ? 'bg-primary text-primary-foreground border-primary' : ''}`}
             aria-label={`${screenReaderMode ? 'Disable' : 'Enable'} screen reader mode`}
           >
             {screenReaderMode ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -96,10 +99,11 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
         {/* Keyboard Navigation */}
         {features.keyboardNavigation && (
           <Button
-            variant="outline"
+            variant="accessibility"
             size="sm"
             onClick={() => setKeyboardMode(!keyboardMode)}
-            className={`keyboard-control ${keyboardMode ? 'active' : ''}`}
+            data-active={keyboardMode}
+            className={`keyboard-control gap-2 ${keyboardMode ? 'bg-primary text-primary-foreground border-primary' : ''}`}
             aria-label={`${keyboardMode ? 'Disable' : 'Enable'} keyboard navigation`}
           >
             {keyboardMode ? <Keyboard className="h-4 w-4" /> : <Mouse className="h-4 w-4" />}
@@ -110,10 +114,11 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
         {/* Tactile Feedback for Hearing Impairment */}
         {features.tactileFeedback && (
           <Button
-            variant="outline"
+            variant="accessibility"
             size="sm"
             onClick={() => setTactileFeedback(!tactileFeedback)}
-            className={`tactile-control ${tactileFeedback ? 'active' : ''}`}
+            data-active={tactileFeedback}
+            className={`tactile-control gap-2 ${tactileFeedback ? 'bg-primary text-primary-foreground border-primary' : ''}`}
             aria-label={`${tactileFeedback ? 'Disable' : 'Enable'} tactile feedback`}
           >
             {tactileFeedback ? <Zap className="h-4 w-4" /> : <ZapOff className="h-4 w-4" />}
