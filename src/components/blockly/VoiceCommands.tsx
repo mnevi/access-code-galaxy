@@ -1,3 +1,4 @@
+// Voice Commands Component - Simplified to use only Hugging Face
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
