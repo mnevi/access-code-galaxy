@@ -27,7 +27,7 @@ const Header = () => {
 
   return (
     <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 min-h-16 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="p-2 bg-gradient-to-r from-primary to-primary-glow rounded-lg">
             <Code className="h-6 w-6 text-primary-foreground" />
