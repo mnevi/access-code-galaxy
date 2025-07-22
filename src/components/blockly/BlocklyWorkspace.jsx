@@ -78,6 +78,7 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
   const [output, setOutput] = useState('');
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [challenge, setChallenge] = useState(null);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const languageRef = useRef(language);
   
   // Initialize accessibility hooks
@@ -91,11 +92,21 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
   const hapticFeedback = useAccessibilityHaptics(features.tactileFeedback || false);
   
   const audioDescriptions = useAudioDescriptions({
-    enabled: features.audioDescriptions || false,
+    enabled: (features.audioDescriptions || false) && isAudioEnabled,
     rate: 1,
     pitch: 1,
     volume: 0.8
   });
+
+  const handleAudioToggle = (enabled) => {
+    setIsAudioEnabled(enabled);
+    if (!enabled) {
+      // Stop any ongoing speech when audio is disabled
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+  };
   
   const languages = ['python', 'javascript', 'lua', 'php', 'dart'];
   const currentLangIndex = languages.indexOf(language);
@@ -358,25 +369,25 @@ const generators = {
   
   // Provide audio description of challenge when component loads
   useEffect(() => {
-    if (challenge && features.audioDescriptions) {
+    if (challenge && features.audioDescriptions && isAudioEnabled) {
       setTimeout(() => {
         audioDescriptions.describeChallenge(challenge, currentProgress);
       }, 1000);
     }
-  }, [challenge, features.audioDescriptions, audioDescriptions, currentProgress]);
+  }, [challenge, features.audioDescriptions, audioDescriptions, currentProgress, isAudioEnabled]);
   
   // Announce progress changes
   useEffect(() => {
     if (features.screenReader && currentProgress > 0) {
       screenReader.announceProgress(currentProgress, challenge?.title);
     }
-    if (features.audioDescriptions) {
+    if (features.audioDescriptions && isAudioEnabled) {
       audioDescriptions.describeProgress(currentProgress, isCompleted);
     }
     if (features.tactileFeedback) {
       hapticFeedback.onProgressUpdate(isCompleted, currentProgress % 25 === 0 && currentProgress > 0);
     }
-  }, [currentProgress, isCompleted, features, screenReader, audioDescriptions, hapticFeedback, challenge]);
+  }, [currentProgress, isCompleted, features, screenReader, audioDescriptions, hapticFeedback, challenge, isAudioEnabled]);
 
   return (
       <div className={`container ${currentMode ? `mode-${currentMode.id}` : ''} ${features.reducedMotion ? 'reduced-motion' : ''}`}>
@@ -400,6 +411,8 @@ const generators = {
           <AccessibilityControls 
             onVoiceToggle={handleVoiceToggle}
             isVoiceActive={isVoiceEnabled}
+            onAudioToggle={handleAudioToggle}
+            isAudioEnabled={isAudioEnabled}
           />
           <div className="header-controls">
             <button

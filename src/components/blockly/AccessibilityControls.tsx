@@ -17,17 +17,26 @@ import {
 interface AccessibilityControlsProps {
   onVoiceToggle: () => void;
   isVoiceActive: boolean;
+  onAudioToggle?: (enabled: boolean) => void;
+  isAudioEnabled?: boolean;
 }
 
 const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
   onVoiceToggle,
-  isVoiceActive
+  isVoiceActive,
+  onAudioToggle,
+  isAudioEnabled = true
 }) => {
   const { currentMode, features } = useAccessibility();
-  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(isAudioEnabled);
   const [screenReaderMode, setScreenReaderMode] = useState(false);
   const [keyboardMode, setKeyboardMode] = useState(false);
   const [tactileFeedback, setTactileFeedback] = useState(false);
+
+  // Update local state when prop changes
+  React.useEffect(() => {
+    setAudioEnabled(isAudioEnabled);
+  }, [isAudioEnabled]);
 
   if (!currentMode) return null;
 
@@ -57,7 +66,11 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setAudioEnabled(!audioEnabled)}
+            onClick={() => {
+              const newState = !audioEnabled;
+              setAudioEnabled(newState);
+              onAudioToggle?.(newState);
+            }}
             className={`audio-control ${audioEnabled ? 'active' : ''}`}
             aria-label={`${audioEnabled ? 'Disable' : 'Enable'} audio descriptions`}
           >

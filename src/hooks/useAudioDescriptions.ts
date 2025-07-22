@@ -54,7 +54,10 @@ export function useAudioDescriptions(options: AudioDescriptionOptions) {
     };
     
     utterance.onerror = (event) => {
-      console.warn('Speech synthesis error:', event.error);
+      // Only log non-interrupted errors to reduce console noise
+      if (event.error !== 'interrupted') {
+        console.warn('Speech synthesis error:', event.error);
+      }
       isSpesking.current = false;
     };
     
