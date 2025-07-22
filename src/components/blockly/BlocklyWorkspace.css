@@ -396,4 +396,42 @@ h1 {
   gap: 8px;
 }
 
-/* ...existing code above... */
+/* Voice selection highlighting */
+.voice-selected {
+  filter: drop-shadow(0 0 8px #ff0000) !important;
+  animation: voice-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes voice-pulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 8px #ff0000); 
+  }
+  50% { 
+    filter: drop-shadow(0 0 16px #ff4444) drop-shadow(0 0 24px #ff6666); 
+  }
+}
+
+/* Enhanced voice feedback */
+#voice-feedback {
+  z-index: 10001 !important;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+/* Mode-specific voice selection styles */
+.mode-visual .voice-selected {
+  filter: drop-shadow(0 0 12px #ffffff) !important;
+}
+
+.mode-visual .voice-selected {
+  animation: voice-pulse-high-contrast 1.5s infinite ease-in-out;
+}
+
+@keyframes voice-pulse-high-contrast {
+  0%, 100% { 
+    filter: drop-shadow(0 0 12px #ffffff); 
+  }
+  50% { 
+    filter: drop-shadow(0 0 20px #ffffff) drop-shadow(0 0 30px #ffffff); 
+  }
+}

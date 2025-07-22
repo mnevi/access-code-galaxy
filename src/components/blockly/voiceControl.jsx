@@ -3,6 +3,8 @@ let recognition = null;
 let isListening = false;
 let workspace = null;
 let utils = null;
+let selectedBlock = null;
+let highlightedBlocks = [];
 
 // Voice commands mapping
 const voiceCommands = {
@@ -47,6 +49,37 @@ const voiceCommands = {
   'switch to javascript': () => switchLanguage('javascript'),
   'switch to html': () => switchLanguage('html'),
   'switch to css': () => switchLanguage('css'),
+  
+  // Block selection commands
+  'select first block': () => selectBlockByPosition('first'),
+  'select last block': () => selectBlockByPosition('last'),
+  'select next block': () => selectAdjacentBlock('next'),
+  'select previous block': () => selectAdjacentBlock('previous'),
+  'select block': () => selectBlockByType(),
+  'deselect block': () => deselectBlock(),
+  'select all blocks': () => selectAllBlocks(),
+  
+  // Block movement commands
+  'move up': () => moveSelectedBlock(0, -50),
+  'move down': () => moveSelectedBlock(0, 50),
+  'move left': () => moveSelectedBlock(-50, 0),
+  'move right': () => moveSelectedBlock(50, 0),
+  'move block up': () => moveSelectedBlock(0, -50),
+  'move block down': () => moveSelectedBlock(0, 50),
+  'move block left': () => moveSelectedBlock(-50, 0),
+  'move block right': () => moveSelectedBlock(50, 0),
+  
+  // Fine movement commands
+  'nudge up': () => moveSelectedBlock(0, -10),
+  'nudge down': () => moveSelectedBlock(0, 10),
+  'nudge left': () => moveSelectedBlock(-10, 0),
+  'nudge right': () => moveSelectedBlock(10, 0),
+  
+  // Block manipulation commands
+  'delete selected block': () => deleteSelectedBlock(),
+  'duplicate selected block': () => duplicateSelectedBlock(),
+  'connect blocks': () => connectSelectedBlocks(),
+  'disconnect block': () => disconnectSelectedBlock(),
 };
 
 function createBlock(blockType) {
@@ -226,11 +259,285 @@ export function getAvailableCommands() {
   return Object.keys(voiceCommands);
 }
 
+// Block selection and manipulation functions
+function selectBlockByPosition(position) {
+  if (!workspace) return;
+  
+  const topBlocks = workspace.getTopBlocks(false);
+  if (topBlocks.length === 0) {
+    announceToScreenReader('No blocks in workspace');
+    return;
+  }
+  
+  let blockToSelect;
+  if (position === 'first') {
+    blockToSelect = topBlocks[0];
+  } else if (position === 'last') {
+    blockToSelect = topBlocks[topBlocks.length - 1];
+  }
+  
+  if (blockToSelect) {
+    selectBlock(blockToSelect);
+    announceToScreenReader(`Selected ${position} block: ${blockToSelect.type.replace(/_/g, ' ')}`);
+  }
+}
+
+function selectAdjacentBlock(direction) {
+  if (!workspace) return;
+  
+  const topBlocks = workspace.getTopBlocks(false);
+  if (topBlocks.length === 0) {
+    announceToScreenReader('No blocks in workspace');
+    return;
+  }
+  
+  if (!selectedBlock) {
+    // If no block selected, select first one
+    selectBlockByPosition('first');
+    return;
+  }
+  
+  const currentIndex = topBlocks.indexOf(selectedBlock);
+  if (currentIndex === -1) {
+    selectBlockByPosition('first');
+    return;
+  }
+  
+  let newIndex;
+  if (direction === 'next') {
+    newIndex = (currentIndex + 1) % topBlocks.length;
+  } else {
+    newIndex = currentIndex === 0 ? topBlocks.length - 1 : currentIndex - 1;
+  }
+  
+  selectBlock(topBlocks[newIndex]);
+  announceToScreenReader(`Selected ${direction} block: ${topBlocks[newIndex].type.replace(/_/g, ' ')}`);
+}
+
+function selectBlockByType() {
+  if (!workspace) return;
+  
+  const topBlocks = workspace.getTopBlocks(false);
+  if (topBlocks.length === 0) {
+    announceToScreenReader('No blocks in workspace');
+    return;
+  }
+  
+  // If no block selected, select first one
+  if (!selectedBlock) {
+    selectBlockByPosition('first');
+  } else {
+    // Cycle through blocks of the same type
+    const sameTypeBlocks = topBlocks.filter(block => block.type === selectedBlock.type);
+    if (sameTypeBlocks.length > 1) {
+      const currentIndex = sameTypeBlocks.indexOf(selectedBlock);
+      const nextIndex = (currentIndex + 1) % sameTypeBlocks.length;
+      selectBlock(sameTypeBlocks[nextIndex]);
+      announceToScreenReader(`Selected next ${selectedBlock.type.replace(/_/g, ' ')} block`);
+    }
+  }
+}
+
+function selectBlock(block) {
+  // Clear previous selection
+  clearBlockHighlight();
+  
+  selectedBlock = block;
+  
+  // Add visual highlight
+  highlightBlock(block);
+  
+  // Focus the block for keyboard navigation
+  if (block.getSvgRoot) {
+    const svgRoot = block.getSvgRoot();
+    if (svgRoot) {
+      svgRoot.setAttribute('stroke', '#ff0000');
+      svgRoot.setAttribute('stroke-width', '3');
+    }
+  }
+}
+
+function highlightBlock(block) {
+  if (block && block.getSvgRoot) {
+    const svgRoot = block.getSvgRoot();
+    if (svgRoot) {
+      svgRoot.classList.add('voice-selected');
+      highlightedBlocks.push(block);
+    }
+  }
+}
+
+function clearBlockHighlight() {
+  highlightedBlocks.forEach(block => {
+    if (block && block.getSvgRoot) {
+      const svgRoot = block.getSvgRoot();
+      if (svgRoot) {
+        svgRoot.classList.remove('voice-selected');
+        svgRoot.removeAttribute('stroke');
+        svgRoot.removeAttribute('stroke-width');
+      }
+    }
+  });
+  highlightedBlocks = [];
+}
+
+function deselectBlock() {
+  if (selectedBlock) {
+    clearBlockHighlight();
+    selectedBlock = null;
+    announceToScreenReader('Block deselected');
+  } else {
+    announceToScreenReader('No block selected');
+  }
+}
+
+function selectAllBlocks() {
+  if (!workspace) return;
+  
+  const topBlocks = workspace.getTopBlocks(false);
+  if (topBlocks.length === 0) {
+    announceToScreenReader('No blocks in workspace');
+    return;
+  }
+  
+  clearBlockHighlight();
+  topBlocks.forEach(block => highlightBlock(block));
+  selectedBlock = topBlocks[0]; // Set first block as primary selection
+  announceToScreenReader(`Selected all ${topBlocks.length} blocks`);
+}
+
+function moveSelectedBlock(deltaX, deltaY) {
+  if (!selectedBlock) {
+    announceToScreenReader('No block selected to move');
+    return;
+  }
+  
+  try {
+    selectedBlock.moveBy(deltaX, deltaY);
+    
+    // Get current position for feedback
+    const xy = selectedBlock.getRelativeToSurfaceXY();
+    announceToScreenReader(`Moved block to position ${Math.round(xy.x)}, ${Math.round(xy.y)}`);
+    
+    // Re-render the block
+    selectedBlock.render();
+  } catch (error) {
+    announceToScreenReader('Could not move block');
+    console.error('Error moving block:', error);
+  }
+}
+
+function deleteSelectedBlock() {
+  if (!selectedBlock) {
+    announceToScreenReader('No block selected to delete');
+    return;
+  }
+  
+  try {
+    const blockType = selectedBlock.type;
+    selectedBlock.dispose();
+    selectedBlock = null;
+    clearBlockHighlight();
+    announceToScreenReader(`Deleted ${blockType.replace(/_/g, ' ')} block`);
+  } catch (error) {
+    announceToScreenReader('Could not delete block');
+    console.error('Error deleting block:', error);
+  }
+}
+
+function duplicateSelectedBlock() {
+  if (!selectedBlock) {
+    announceToScreenReader('No block selected to duplicate');
+    return;
+  }
+  
+  try {
+    // Create a new block of the same type
+    const newBlock = workspace.newBlock(selectedBlock.type);
+    newBlock.initSvg();
+    newBlock.render();
+    
+    // Position it near the original block
+    const originalXY = selectedBlock.getRelativeToSurfaceXY();
+    newBlock.moveBy(originalXY.x + 50, originalXY.y + 50);
+    
+    // Select the new block
+    selectBlock(newBlock);
+    
+    announceToScreenReader(`Duplicated ${selectedBlock.type.replace(/_/g, ' ')} block`);
+  } catch (error) {
+    announceToScreenReader('Could not duplicate block');
+    console.error('Error duplicating block:', error);
+  }
+}
+
+function connectSelectedBlocks() {
+  if (highlightedBlocks.length < 2) {
+    announceToScreenReader('Need at least two blocks to connect');
+    return;
+  }
+  
+  try {
+    const [block1, block2] = highlightedBlocks;
+    
+    // Try to find compatible connections
+    const connections1 = block1.getConnections_(false);
+    const connections2 = block2.getConnections_(false);
+    
+    for (const conn1 of connections1) {
+      for (const conn2 of connections2) {
+        if (conn1.checkType_(conn2) && !conn1.isConnected() && !conn2.isConnected()) {
+          conn1.connect(conn2);
+          announceToScreenReader('Blocks connected');
+          return;
+        }
+      }
+    }
+    
+    announceToScreenReader('Could not find compatible connection points');
+  } catch (error) {
+    announceToScreenReader('Could not connect blocks');
+    console.error('Error connecting blocks:', error);
+  }
+}
+
+function disconnectSelectedBlock() {
+  if (!selectedBlock) {
+    announceToScreenReader('No block selected to disconnect');
+    return;
+  }
+  
+  try {
+    const connections = selectedBlock.getConnections_(false);
+    let disconnected = false;
+    
+    connections.forEach(conn => {
+      if (conn.isConnected()) {
+        conn.disconnect();
+        disconnected = true;
+      }
+    });
+    
+    if (disconnected) {
+      announceToScreenReader('Block disconnected');
+    } else {
+      announceToScreenReader('Block has no connections to disconnect');
+    }
+  } catch (error) {
+    announceToScreenReader('Could not disconnect block');
+    console.error('Error disconnecting block:', error);
+  }
+}
+
 // Cleanup function
 export function cleanup() {
   if (recognition && isListening) {
     recognition.stop();
   }
+  
+  // Clear block selection
+  clearBlockHighlight();
+  selectedBlock = null;
   
   // Remove feedback elements
   const feedback = document.getElementById('voice-feedback');
