@@ -17,17 +17,32 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    const loadProfileData = async () => {
+      const { data } = await supabase.auth.getUser();
       const user = data?.user;
       if (user) {
-        supabase
+        // Load profile data
+        const { data: profileData } = await supabase
           .from("profiles")
           .select("username, display_name, avatar_url, accessibility_mode, xp_points, current_streak")
           .eq("id", user.id)
-          .single()
-          .then(({ data }) => setProfile(data));
+          .single();
+        
+        // Load completed challenges count
+        const { data: completedChallenges } = await supabase
+          .from('challenge_progress')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('completed', true);
+
+        setProfile({
+          ...profileData,
+          completedChallenges: completedChallenges?.length || 0
+        });
       }
-    });
+    };
+
+    loadProfileData();
   }, []);
 
   const handleSaveAvatar = async () => {
@@ -88,16 +103,20 @@ const Profile = () => {
           </Button>
         )}
       </div>
-        <div className="grid grid-cols-2 gap-6 mb-10">
+        <div className="grid grid-cols-3 gap-4 mb-10">
           <div className="bg-white/80 dark:bg-background/80 rounded-xl p-6 text-center shadow border border-border backdrop-blur-sm">
-          <div className="text-lg font-semibold">XP Points</div>
-          <div className="text-3xl font-bold text-primary">{profile.xp_points}</div>
-        </div>
+            <div className="text-lg font-semibold">XP Points</div>
+            <div className="text-3xl font-bold text-primary">{profile.xp_points?.toLocaleString()}</div>
+          </div>
           <div className="bg-white/80 dark:bg-background/80 rounded-xl p-6 text-center shadow border border-border backdrop-blur-sm">
-          <div className="text-lg font-semibold">Current Streak</div>
-          <div className="text-3xl font-bold text-primary">{profile.current_streak}</div>
+            <div className="text-lg font-semibold">Challenges Completed</div>
+            <div className="text-3xl font-bold text-primary">{profile.completedChallenges}</div>
+          </div>
+          <div className="bg-white/80 dark:bg-background/80 rounded-xl p-6 text-center shadow border border-border backdrop-blur-sm">
+            <div className="text-lg font-semibold">Current Streak</div>
+            <div className="text-3xl font-bold text-primary">{profile.current_streak} day{profile.current_streak !== 1 ? 's' : ''}</div>
+          </div>
         </div>
-      </div>
         <div className="mb-8">
         <h3 className="text-xl font-semibold mb-4 text-primary">Settings</h3>
         <div className="flex flex-col gap-6">

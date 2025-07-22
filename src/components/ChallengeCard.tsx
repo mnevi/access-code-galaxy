@@ -13,6 +13,7 @@ interface ChallengeCardProps {
   xpReward: number;
   isCompleted: boolean;
   isLocked: boolean;
+  onClick?: () => void;
 }
 
 const ChallengeCard: React.FC<ChallengeCardProps> = ({
@@ -24,6 +25,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
   xpReward,
   isCompleted,
   isLocked,
+  onClick,
 }) => {
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
@@ -80,6 +82,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
         className={isCompleted ? "btn-success" : "btn-hero"}
         disabled={isLocked}
         size="sm"
+        onClick={onClick}
       >
         {isLocked ? "Locked" : isCompleted ? "Completed" : progress > 0 ? "Continue" : "Start Challenge"}
       </Button>

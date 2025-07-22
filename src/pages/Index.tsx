@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import AccessibilityModeCard from "@/components/AccessibilityModeCard";
 import ChallengeCard from "@/components/ChallengeCard";
 import StatsCard from "@/components/StatsCard";
+import { ChallengeService } from "@/services/challengeService";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Zap, 
   Trophy, 
@@ -26,6 +28,8 @@ import fmsIcon from "@/assets/fms-icon.jpg";
 
 const Index = () => {
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
+  const [challenges, setChallenges] = useState([]);
+  const [userStats, setUserStats] = useState({ xpPoints: 0, challengesCompleted: 0, currentStreak: 0 });
 
   const accessibilityModes = [
     {
@@ -78,7 +82,75 @@ const Index = () => {
     }
   ];
 
-  const challenges = [
+  useEffect(() => {
+    const loadUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Load challenges with progress
+        const challengesWithProgress = await ChallengeService.getChallengesWithProgress(user.id);
+        setChallenges(challengesWithProgress);
+
+        // Load user stats
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('xp_points, current_streak')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          const { data: completedChallenges } = await supabase
+            .from('challenge_progress')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('completed', true);
+
+          setUserStats({
+            xpPoints: profile.xp_points || 0,
+            challengesCompleted: completedChallenges?.length || 0,
+            currentStreak: profile.current_streak || 0
+          });
+        }
+      } else {
+        // Load default challenges for non-authenticated users
+        setChallenges([
+          {
+            title: "HTML Basics",
+            description: "Learn the fundamental building blocks of web development",
+            difficulty: "Beginner" as const,
+            estimatedTime: "45 min",
+            progress: 0,
+            xpReward: 100,
+            isCompleted: false,
+            isLocked: false
+          },
+          {
+            title: "CSS Styling",
+            description: "Master the art of styling web pages with CSS",
+            difficulty: "Beginner" as const,
+            estimatedTime: "60 min",
+            progress: 0,
+            xpReward: 150,
+            isCompleted: false,
+            isLocked: false
+          },
+          {
+            title: "JavaScript Functions",
+            description: "Dive into programming logic with JavaScript",
+            difficulty: "Intermediate" as const,
+            estimatedTime: "90 min",
+            progress: 0,
+            xpReward: 200,
+            isCompleted: false,
+            isLocked: true
+          }
+        ]);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  const staticChallenges = [
     {
       title: "HTML Basics",
       description: "Learn the fundamental building blocks of web development",
@@ -188,25 +260,25 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <StatsCard
               title="Total XP Earned"
-              value="2,450"
+              value={userStats.xpPoints.toLocaleString()}
               subtitle="Keep learning to earn more!"
-              progress={75}
+              progress={Math.min(100, (userStats.xpPoints / 1000) * 100)}
               icon={<Zap className="h-6 w-6" />}
               color="primary"
             />
             <StatsCard
               title="Challenges Completed"
-              value="12"
-              subtitle="3 more this week"
-              progress={60}
+              value={userStats.challengesCompleted}
+              subtitle={`${Math.max(0, 3 - userStats.challengesCompleted)} more to go!`}
+              progress={Math.min(100, (userStats.challengesCompleted / 3) * 100)}
               icon={<Trophy className="h-6 w-6" />}
               color="success"
             />
             <StatsCard
               title="Current Streak"
-              value="7 days"
-              subtitle="Personal best!"
-              progress={85}
+              value={`${userStats.currentStreak} day${userStats.currentStreak !== 1 ? 's' : ''}`}
+              subtitle={userStats.currentStreak > 0 ? "Keep it up!" : "Start your streak!"}
+              progress={Math.min(100, (userStats.currentStreak / 7) * 100)}
               icon={<Target className="h-6 w-6" />}
               color="warning"
             />
@@ -277,7 +349,11 @@ const Index = () => {
 
           <div className="grid md:grid-cols-3 gap-8">
             {challenges.map((challenge, index) => (
-              <ChallengeCard key={index} {...challenge} />
+              <ChallengeCard 
+                key={challenge.id || index} 
+                {...challenge} 
+                onClick={() => window.location.href = `/challenge?id=${challenge.id || 'html-basics'}`}
+              />
             ))}
           </div>
 

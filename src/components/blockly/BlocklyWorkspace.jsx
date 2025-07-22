@@ -5,10 +5,13 @@ import * as BlocklyJavaScript from 'blockly/javascript';
 import './BlocklyWorkspace.css';
 import * as BlocklyUtils from './blocklyUtils';
 import { toggleVoiceRecognition } from './voiceControl';
+import { useChallengeProgress } from '../../hooks/useChallengeProgress';
+import { ChallengeService } from '../../services/challengeService';
 
 
-const BlocklyWorkspace = () => {
+const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
   const blocklyDiv = useRef(null);
+  const { currentProgress, isCompleted, isEvaluating, evaluateWorkspace } = useChallengeProgress(challengeId);
   // Define the toolbox XML as a string
   const toolboxXml = `
     <xml>
@@ -111,9 +114,14 @@ const BlocklyWorkspace = () => {
       window.blocklyWorkspace = workspaceRef.current;
       window.BlocklyUtils = BlocklyUtils;
 
-      workspaceRef.current.addChangeListener(() =>
-        generateCode(languageRef.current)
-      );
+      workspaceRef.current.addChangeListener(() => {
+        generateCode(languageRef.current);
+        // Debounce evaluation to avoid too many calls
+        clearTimeout(window.evaluationTimeout);
+        window.evaluationTimeout = setTimeout(() => {
+          evaluateWorkspace(workspaceRef.current);
+        }, 1000);
+      });
 
       window.addEventListener('resize', handleResize);
     }
@@ -203,7 +211,22 @@ const generators = {
   return (
       <div className="container">
         <div className="header">
-          <h1>Blockly Accessibility Coding Platform</h1>
+          <div className="challenge-info">
+            <h1>Blockly Accessibility Coding Platform</h1>
+            {challengeId && (
+              <div className="challenge-progress">
+                <span>Challenge: {ChallengeService.getChallengeById(challengeId)?.title}</span>
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill" 
+                    style={{ width: `${currentProgress}%` }}
+                  ></div>
+                </div>
+                <span>{Math.round(currentProgress)}% Complete</span>
+                {isCompleted && <span className="completed-badge">✅ Completed!</span>}
+              </div>
+            )}
+          </div>
           <div className="header-controls">
             <button
               className="clear-btn"
