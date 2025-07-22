@@ -4,7 +4,7 @@ import * as BlocklyPython from 'blockly/python';
 import * as BlocklyJavaScript from 'blockly/javascript';
 import './BlocklyWorkspace.css';
 import * as BlocklyUtils from './blocklyUtils';
-import { initializeVoiceRecognition, toggleVoiceRecognition, isVoiceActive, cleanup } from './voiceControl';
+import { initializeVoiceRecognition, toggleVoiceRecognition, isVoiceActive, cleanup } from './voiceControl.jsx';
 import { useChallengeProgress } from '../../hooks/useChallengeProgress';
 import { ChallengeService } from '../../services/challengeService';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
