@@ -74,8 +74,12 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
     // Filter out non-speech transcriptions
     const nonSpeechPatterns = [
       /\[.*?\]/,  // [Sigh], [SOUND], [Music], etc.
+      /\(.*?\)/,  // (sighs), (breathing heavily), etc.
       /^\s*$/,    // Empty or whitespace only
-      /^(sigh|breath|breathing|sound|music|noise)s?$/i
+      /^(sigh|breath|breathing|sound|music|noise|cough|clear|throat)s?$/i,
+      /breathing/i,
+      /sighs?/i,
+      /sounds?/i
     ];
     
     for (const pattern of nonSpeechPatterns) {
@@ -232,12 +236,14 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
           } else {
             // Check if it was non-speech
             const isNonSpeech = /\[.*?\]/.test(transcription) || 
-                               /^(sigh|breath|breathing|sound|music|noise)s?$/i.test(transcription.toLowerCase().trim());
+                               /\(.*?\)/.test(transcription) ||
+                               /^(sigh|breath|breathing|sound|music|noise|cough|clear|throat)s?$/i.test(transcription.toLowerCase().trim()) ||
+                               /breathing|sighs?|sounds?/i.test(transcription);
             
             toast({
               title: isNonSpeech ? "Please Speak Clearly" : "Command Not Recognized",
               description: isNonSpeech 
-                ? "The microphone detected background noise. Try speaking directly into the mic."
+                ? "The microphone detected background noise. Try speaking directly into the mic with clear words like 'print' or 'if'."
                 : `Try saying "place print" or "add if block". Heard: "${transcription}"`,
               variant: "destructive",
             });
