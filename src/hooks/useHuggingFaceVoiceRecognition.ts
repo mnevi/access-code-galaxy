@@ -1,10 +1,6 @@
+
 import { useState, useRef, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { pipeline, env } from '@huggingface/transformers';
-
-// Configure transformers.js for browser use
-env.allowLocalModels = false;
-env.useBrowserCache = true;
 
 interface VoiceRecognitionOptions {
   onCommand: (command: string, text: string) => void;
@@ -14,11 +10,9 @@ interface VoiceRecognitionOptions {
 export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceRecognitionOptions) => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isModelLoading, setIsModelLoading] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const transcriptionPipelineRef = useRef<any>(null);
+  const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
+  const [isModelLoading] = useState(false); // Not used for Web Speech API
 
   // Voice commands for block placement
   const blockCommands = {
@@ -29,14 +23,12 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
     'for loop': 'controls_for',
     'if': 'controls_if',
     'if else': 'controls_ifelse',
-    
     // Text blocks
     'print': 'text_print',
     'text': 'text',
     'join text': 'text_join',
     'text length': 'text_length',
     'ask': 'text_prompt_ext',
-    
     // Math blocks
     'number': 'math_number',
     'math': 'math_arithmetic',
@@ -45,7 +37,6 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
     'multiply': 'math_arithmetic',
     'divide': 'math_arithmetic',
     'square root': 'math_single',
-    
     // Logic blocks
     'true': 'logic_boolean',
     'false': 'logic_boolean',
@@ -53,12 +44,10 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
     'or': 'logic_operation',
     'not': 'logic_negate',
     'compare': 'logic_compare',
-    
     // Variable blocks
     'variable': 'variables_get',
     'set variable': 'variables_set',
     'change variable': 'variables_change',
-    
     // Function blocks
     'function': 'procedures_defnoreturn',
     'return': 'procedures_defreturn',
@@ -67,10 +56,8 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
 
   const parseCommand = (text: string): { command: string; blockType: string } | null => {
     const lowerText = text.toLowerCase().trim();
-    
     console.log('🎤 Voice transcription received:', text);
     console.log('🔍 Processed text for matching:', lowerText);
-    
     // Filter out non-speech transcriptions
     const nonSpeechPatterns = [
       /\[.*?\]/,  // [Sigh], [SOUND], [Music], etc.
@@ -81,16 +68,13 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
       /sighs?/i,
       /sounds?/i
     ];
-    
     for (const pattern of nonSpeechPatterns) {
       if (pattern.test(lowerText)) {
         console.log('🚫 Non-speech detected, ignoring:', lowerText);
         return null;
       }
     }
-    
     console.log('📋 Available commands:', Object.keys(blockCommands));
-    
     // Check for direct block commands
     for (const [keyword, blockType] of Object.entries(blockCommands)) {
       if (lowerText.includes(keyword)) {
@@ -98,7 +82,6 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
         return { command: keyword, blockType };
       }
     }
-
     // Check for placement commands
     if (lowerText.includes('place') || lowerText.includes('add') || lowerText.includes('create')) {
       console.log('🔄 Checking placement commands for:', lowerText);
@@ -109,190 +92,83 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
         }
       }
     }
-
     console.log('❌ No command match found for:', lowerText);
     return null;
   };
 
-  const loadModel = useCallback(async () => {
-    if (transcriptionPipelineRef.current) return transcriptionPipelineRef.current;
-
-    try {
-      setIsModelLoading(true);
+  const startListening = useCallback(() => {
+    if (!enabled || isListening) return;
+    // Check for browser support
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
       toast({
-        title: "Loading Speech Model",
-        description: "Downloading Whisper model for the first time...",
-      });
-
-      // Load the Whisper model for automatic speech recognition
-      const transcriber = await pipeline(
-        'automatic-speech-recognition',
-        'onnx-community/whisper-tiny.en',
-        { 
-          device: 'webgpu',
-          // Fallback to CPU if WebGPU is not available
-          dtype: 'fp32'
-        }
-      );
-
-      transcriptionPipelineRef.current = transcriber;
-      
-      toast({
-        title: "Model Loaded",
-        description: "Speech recognition is ready!",
-      });
-
-      return transcriber;
-    } catch (error) {
-      console.error('Error loading speech model:', error);
-      toast({
-        title: "Model Loading Error",
-        description: "Failed to load speech model. Using fallback.",
+        title: "Speech Recognition Not Supported",
+        description: "Your browser does not support the Web Speech API.",
         variant: "destructive",
       });
-      throw error;
-    } finally {
-      setIsModelLoading(false);
+      return;
     }
-  }, [toast]);
-
-  const processAudio = useCallback(async (audioBlob: Blob) => {
-    try {
-      const transcriber = await loadModel();
-      
-      // Convert blob to array buffer
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      
-      // Create audio context to process the audio
-      const audioContext = new AudioContext();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      
-      // Convert to the format expected by Whisper
-      const audio = audioBuffer.getChannelData(0);
-      
-      // Perform transcription
-      const result = await transcriber(audio);
-      
-      console.log('Transcription result:', result);
-      
-      return result.text || '';
-    } catch (error) {
-      console.error('Error processing audio:', error);
-      throw error;
-    }
-  }, [loadModel]);
-
-  const startListening = useCallback(async () => {
-    if (!enabled || isListening || isModelLoading) return;
-
-    try {
-      // Load model first if not loaded
-      if (!transcriptionPipelineRef.current) {
-        await loadModel();
+    setIsListening(true);
+    setIsProcessing(true);
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event: any) => {
+      setIsListening(false);
+      setIsProcessing(false);
+      const transcript = event.results[0][0].transcript;
+      console.log('Voice transcription:', transcript);
+      const parsedCommand = parseCommand(transcript);
+      if (parsedCommand) {
+        onCommand(parsedCommand.blockType, transcript);
+        toast({
+          title: "Voice Command Recognized",
+          description: `Placing ${parsedCommand.command} block`,
+        });
+      } else {
+        // Check if it was non-speech
+        const isNonSpeech = /\[.*?\]/.test(transcript) || 
+                           /\(.*?\)/.test(transcript) ||
+                           /^(sigh|breath|breathing|sound|music|noise|cough|clear|throat)s?$/i.test(transcript.toLowerCase().trim()) ||
+                           /breathing|sighs?|sounds?/i.test(transcript);
+        toast({
+          title: isNonSpeech ? "Please Speak Clearly" : "Command Not Recognized",
+          description: isNonSpeech 
+            ? "The microphone detected background noise. Try speaking directly into the mic with clear words like 'print' or 'if'."
+            : `Try saying "place print" or "add if block". Heard: "${transcript}"`,
+          variant: "destructive",
+        });
       }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          sampleRate: 16000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-        }
-      });
-
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        setIsListening(false);
-        setIsProcessing(true);
-
-        try {
-          const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-          
-          // Process audio with Hugging Face Transformers
-          const transcription = await processAudio(audioBlob);
-          
-          console.log('Voice transcription:', transcription);
-
-          // Parse the command
-          const parsedCommand = parseCommand(transcription);
-          if (parsedCommand) {
-            onCommand(parsedCommand.blockType, transcription);
-            toast({
-              title: "Voice Command Recognized",
-              description: `Placing ${parsedCommand.command} block`,
-            });
-          } else {
-            // Check if it was non-speech
-            const isNonSpeech = /\[.*?\]/.test(transcription) || 
-                               /\(.*?\)/.test(transcription) ||
-                               /^(sigh|breath|breathing|sound|music|noise|cough|clear|throat)s?$/i.test(transcription.toLowerCase().trim()) ||
-                               /breathing|sighs?|sounds?/i.test(transcription);
-            
-            toast({
-              title: isNonSpeech ? "Please Speak Clearly" : "Command Not Recognized",
-              description: isNonSpeech 
-                ? "The microphone detected background noise. Try speaking directly into the mic with clear words like 'print' or 'if'."
-                : `Try saying "place print" or "add if block". Heard: "${transcription}"`,
-              variant: "destructive",
-            });
-          }
-        } catch (error) {
-          console.error('Voice processing error:', error);
-          toast({
-            title: "Voice Processing Error",
-            description: "Failed to process voice command",
-            variant: "destructive",
-          });
-        } finally {
-          setIsProcessing(false);
-        }
-
-        // Clean up stream
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      setIsListening(true);
-      mediaRecorder.start();
-
-      // Auto-stop after 5 seconds
-      setTimeout(() => {
-        if (mediaRecorderRef.current?.state === 'recording') {
-          mediaRecorderRef.current.stop();
-        }
-      }, 5000);
-
-    } catch (error) {
-      console.error('Error starting voice recognition:', error);
+    };
+    recognition.onerror = (event: any) => {
+      setIsListening(false);
+      setIsProcessing(false);
+      console.error('Speech recognition error:', event.error);
       toast({
-        title: "Microphone Error",
-        description: "Could not access microphone",
+        title: "Speech Recognition Error",
+        description: `Could not process speech: ${event.error}`,
         variant: "destructive",
       });
-    }
-  }, [enabled, isListening, isModelLoading, onCommand, toast, loadModel, processAudio]);
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+      setIsProcessing(false);
+    };
+    recognition.start();
+  }, [enabled, isListening, onCommand, toast]);
 
   const stopListening = useCallback(() => {
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
     }
   }, []);
 
   return {
     isListening,
     isProcessing,
-    isModelLoading,
+    isModelLoading: false,
     startListening,
     stopListening,
     availableCommands: Object.keys(blockCommands)
