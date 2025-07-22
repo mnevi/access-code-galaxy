@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as Blockly from 'blockly';
 import * as BlocklyPython from 'blockly/python';
 import * as BlocklyJavaScript from 'blockly/javascript';
@@ -335,7 +335,7 @@ const generators = {
   };
 
   // Function to place a block via voice command
-  const placeBlockViaVoice = (blockType) => {
+  const placeBlockViaVoice = useCallback((blockType) => {
     const workspace = workspaceRef.current;
     if (!workspace) return;
 
@@ -374,7 +374,7 @@ const generators = {
         audioDescriptions.describeError('Failed to place block');
       }
     }
-  };
+  }, [language, features, screenReader, audioDescriptions, isAudioEnabled, hapticFeedback]);
 
 
   const handleLanguageChange = (e) => {
