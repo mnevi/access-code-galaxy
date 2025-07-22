@@ -68,22 +68,30 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
   const parseCommand = (text: string): { command: string; blockType: string } | null => {
     const lowerText = text.toLowerCase().trim();
     
+    console.log('🎤 Voice transcription received:', text);
+    console.log('🔍 Processed text for matching:', lowerText);
+    console.log('📋 Available commands:', Object.keys(blockCommands));
+    
     // Check for direct block commands
     for (const [keyword, blockType] of Object.entries(blockCommands)) {
       if (lowerText.includes(keyword)) {
+        console.log('✅ Direct match found:', keyword, '->', blockType);
         return { command: keyword, blockType };
       }
     }
 
     // Check for placement commands
     if (lowerText.includes('place') || lowerText.includes('add') || lowerText.includes('create')) {
+      console.log('🔄 Checking placement commands for:', lowerText);
       for (const [keyword, blockType] of Object.entries(blockCommands)) {
         if (lowerText.includes(keyword)) {
+          console.log('✅ Placement match found:', keyword, '->', blockType);
           return { command: `place ${keyword}`, blockType };
         }
       }
     }
 
+    console.log('❌ No command match found for:', lowerText);
     return null;
   };
 
