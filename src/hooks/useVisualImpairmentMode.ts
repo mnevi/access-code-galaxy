@@ -118,11 +118,11 @@ export function useVisualImpairmentMode() {
 
     const root = document.documentElement;
     
-    // Apply color scheme and contrast
+    // Apply color scheme and contrast directly to data attributes
     root.setAttribute('data-visual-theme', settings.colorScheme);
     root.setAttribute('data-contrast', settings.contrastMode);
     
-    // Apply font size directly to root
+    // Apply font size directly to root (like neurodivergent mode)
     const fontSizeMap = {
       medium: '1rem',
       large: '1.125rem',
@@ -132,7 +132,7 @@ export function useVisualImpairmentMode() {
     };
     root.style.fontSize = fontSizeMap[settings.fontSize];
     
-    // Apply font weight
+    // Apply font weight directly to root
     const fontWeightMap = {
       normal: '400',
       medium: '500',
@@ -141,7 +141,7 @@ export function useVisualImpairmentMode() {
     };
     root.style.fontWeight = fontWeightMap[settings.fontWeight];
     
-    // Apply line spacing
+    // Apply line spacing directly to root
     const lineSpacingMap = {
       normal: '1.5',
       relaxed: '1.6',
@@ -150,7 +150,7 @@ export function useVisualImpairmentMode() {
     };
     root.style.lineHeight = lineSpacingMap[settings.lineSpacing];
     
-    // Apply letter spacing
+    // Apply letter spacing directly to root
     const letterSpacingMap = {
       normal: '0',
       wide: '0.025em',
@@ -159,7 +159,7 @@ export function useVisualImpairmentMode() {
     };
     root.style.letterSpacing = letterSpacingMap[settings.letterSpacing];
     
-    // Apply font family
+    // Apply font family directly to root
     if (settings.fontFamily === 'sans-serif') {
       root.style.fontFamily = 'Arial, Helvetica, sans-serif';
     } else if (settings.fontFamily === 'high-readability') {
@@ -168,7 +168,7 @@ export function useVisualImpairmentMode() {
       root.style.fontFamily = '';
     }
     
-    // Apply visual enhancements
+    // Apply CSS classes for visual enhancements
     if (settings.enhancedFocus) {
       root.classList.add('visual-enhanced-focus');
     } else {
@@ -217,21 +217,13 @@ export function useVisualImpairmentMode() {
       root.classList.remove('visual-monochrome');
     }
     
-    // Apply focus size
+    // Apply only essential CSS custom properties for focus and cursor
     const focusSizeMap = {
       normal: '2px',
       large: '4px',
       'extra-large': '6px'
     };
     root.style.setProperty('--visual-focus-width', focusSizeMap[settings.focusSize]);
-    
-    // Apply cursor size
-    const cursorSizeMap = {
-      normal: '1',
-      large: '1.5',
-      'extra-large': '2'
-    };
-    root.style.setProperty('--visual-cursor-scale', cursorSizeMap[settings.cursorSize]);
     
     return () => {
       root.removeAttribute('data-visual-theme');
@@ -252,7 +244,6 @@ export function useVisualImpairmentMode() {
         'visual-monochrome'
       );
       root.style.removeProperty('--visual-focus-width');
-      root.style.removeProperty('--visual-cursor-scale');
     };
   }, [isActive, settings]);
 
