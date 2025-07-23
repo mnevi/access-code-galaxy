@@ -122,13 +122,13 @@ export function useVisualImpairmentMode() {
     root.setAttribute('data-visual-theme', settings.colorScheme);
     root.setAttribute('data-contrast', settings.contrastMode);
     
-    // Apply font size directly to root (like neurodivergent mode)
+    // Apply font size directly to root (using same ratios as neurodivergent mode)
     const fontSizeMap = {
-      medium: '1rem',
-      large: '1.125rem',
-      'extra-large': '1.25rem',
-      huge: '1.5rem',
-      massive: '1.75rem'
+      medium: '1rem',        // same as neurodivergent medium
+      large: '1.125rem',     // same as neurodivergent large 
+      'extra-large': '1.25rem', // same as neurodivergent extra-large
+      huge: '1.375rem',      // scaled proportionally
+      massive: '1.5rem'      // scaled proportionally
     };
     root.style.fontSize = fontSizeMap[settings.fontSize];
     
