@@ -478,8 +478,8 @@ const generators = {
             </select>
             <button onClick={handleRun} className="run-btn">Run</button>
             <button onClick={handleClear} className="clear-btn">Clear</button>
-            {/* Voice button only shows if not using accessibility controls */}
-            {!features.voiceCommands && currentMode?.id !== 'motor' && (
+            {/* Voice button only shows if not using accessibility controls and not in neurodivergent mode */}
+            {!features.voiceCommands && currentMode?.id !== 'motor' && currentMode?.id !== 'neurodivergent' && (
               <button
                   onClick={handleVoiceToggle}
                   className="voice-btn"

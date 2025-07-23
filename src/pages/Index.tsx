@@ -207,9 +207,9 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen bg-background ${showSettings ? 'overflow-hidden' : ''}`}>
-      {/* Background Blur Overlay for Settings */}
+      {/* Background Blur Overlay for Settings - Higher z-index for proper layering */}
       {showSettings && (
-        <div className="fixed inset-0 bg-background/50 backdrop-blur-md z-30" />
+        <div className="fixed inset-0 bg-background/60 backdrop-blur-lg z-50" style={{ backdropFilter: 'blur(20px) saturate(180%)' }} />
       )}
       
       <Header />

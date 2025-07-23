@@ -134,9 +134,9 @@ const Challenge: React.FC = () => {
         </div>
       )}
 
-      {/* Background Blur Overlay for Settings */}
+      {/* Background Blur Overlay for Settings - Higher z-index to cover blockly panels */}
       {showSettings && (
-        <div className="fixed inset-0 bg-background/50 backdrop-blur-md z-30" />
+        <div className="fixed inset-0 bg-background/60 backdrop-blur-lg z-50" style={{ backdropFilter: 'blur(20px) saturate(180%)' }} />
       )}
 
       {/* Challenge Header */}
