@@ -83,67 +83,98 @@ const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) 
               <h3 className="text-lg font-semibold mb-3">Available Commands</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
+                  <h4 className="font-medium text-sm mb-2">Block Selection</h4>
+                  <div className="space-y-1">
+                    <Badge variant="secondary" className="text-xs">select first block</Badge>
+                    <Badge variant="secondary" className="text-xs">select last block</Badge>
+                    <Badge variant="secondary" className="text-xs">select next block</Badge>
+                    <Badge variant="secondary" className="text-xs">select previous block</Badge>
+                    <Badge variant="secondary" className="text-xs">select block</Badge>
+                    <Badge variant="secondary" className="text-xs">deselect block</Badge>
+                    <Badge variant="secondary" className="text-xs">select all blocks</Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Block Movement</h4>
+                  <div className="space-y-1">
+                    <Badge variant="secondary" className="text-xs">move up/down/left/right</Badge>
+                    <Badge variant="secondary" className="text-xs">nudge up/down/left/right</Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Block Actions</h4>
+                  <div className="space-y-1">
+                    <Badge variant="secondary" className="text-xs">delete selected block</Badge>
+                    <Badge variant="secondary" className="text-xs">duplicate selected block</Badge>
+                    <Badge variant="secondary" className="text-xs">connect blocks</Badge>
+                    <Badge variant="secondary" className="text-xs">disconnect block</Badge>
+                  </div>
+                </div>
+
+                <div>
                   <h4 className="font-medium text-sm mb-2">Control Blocks</h4>
                   <div className="space-y-1">
-                    <Badge variant="secondary" className="text-xs">repeat</Badge>
-                    <Badge variant="secondary" className="text-xs">loop</Badge>
-                    <Badge variant="secondary" className="text-xs">while</Badge>
-                    <Badge variant="secondary" className="text-xs">for loop</Badge>
-                    <Badge variant="secondary" className="text-xs">if</Badge>
-                    <Badge variant="secondary" className="text-xs">if else</Badge>
+                    <Badge variant="secondary" className="text-xs">add repeat block</Badge>
+                    <Badge variant="secondary" className="text-xs">add if block</Badge>
+                    <Badge variant="secondary" className="text-xs">add for loop</Badge>
+                    <Badge variant="secondary" className="text-xs">add while loop</Badge>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-medium text-sm mb-2">Text Blocks</h4>
+                  <h4 className="font-medium text-sm mb-2">Text & Print</h4>
                   <div className="space-y-1">
-                    <Badge variant="secondary" className="text-xs">print</Badge>
-                    <Badge variant="secondary" className="text-xs">text</Badge>
-                    <Badge variant="secondary" className="text-xs">join text</Badge>
-                    <Badge variant="secondary" className="text-xs">text length</Badge>
-                    <Badge variant="secondary" className="text-xs">ask</Badge>
+                    <Badge variant="secondary" className="text-xs">add text block</Badge>
+                    <Badge variant="secondary" className="text-xs">add print block</Badge>
+                    <Badge variant="secondary" className="text-xs">add heading block</Badge>
+                    <Badge variant="secondary" className="text-xs">add paragraph block</Badge>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-medium text-sm mb-2">Math Blocks</h4>
+                  <h4 className="font-medium text-sm mb-2">Math & Variables</h4>
                   <div className="space-y-1">
-                    <Badge variant="secondary" className="text-xs">number</Badge>
-                    <Badge variant="secondary" className="text-xs">add</Badge>
-                    <Badge variant="secondary" className="text-xs">subtract</Badge>
-                    <Badge variant="secondary" className="text-xs">multiply</Badge>
-                    <Badge variant="secondary" className="text-xs">divide</Badge>
+                    <Badge variant="secondary" className="text-xs">add number block</Badge>
+                    <Badge variant="secondary" className="text-xs">add variable block</Badge>
+                    <Badge variant="secondary" className="text-xs">add function block</Badge>
+                    <Badge variant="secondary" className="text-xs">add list block</Badge>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-medium text-sm mb-2">Logic Blocks</h4>
+                  <h4 className="font-medium text-sm mb-2">Workspace</h4>
                   <div className="space-y-1">
-                    <Badge variant="secondary" className="text-xs">true</Badge>
-                    <Badge variant="secondary" className="text-xs">false</Badge>
-                    <Badge variant="secondary" className="text-xs">and</Badge>
-                    <Badge variant="secondary" className="text-xs">or</Badge>
-                    <Badge variant="secondary" className="text-xs">not</Badge>
+                    <Badge variant="secondary" className="text-xs">zoom in/out</Badge>
+                    <Badge variant="secondary" className="text-xs">center workspace</Badge>
+                    <Badge variant="secondary" className="text-xs">clear workspace</Badge>
+                    <Badge variant="secondary" className="text-xs">undo/redo</Badge>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-medium text-sm mb-2">Variables</h4>
+                  <h4 className="font-medium text-sm mb-2">Languages</h4>
                   <div className="space-y-1">
-                    <Badge variant="secondary" className="text-xs">variable</Badge>
-                    <Badge variant="secondary" className="text-xs">set variable</Badge>
-                    <Badge variant="secondary" className="text-xs">change variable</Badge>
+                    <Badge variant="secondary" className="text-xs">switch to python</Badge>
+                    <Badge variant="secondary" className="text-xs">switch to javascript</Badge>
+                    <Badge variant="secondary" className="text-xs">switch to html</Badge>
+                    <Badge variant="secondary" className="text-xs">run code</Badge>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <div>
-                  <h4 className="font-medium text-sm mb-2">Functions</h4>
-                  <div className="space-y-1">
-                    <Badge variant="secondary" className="text-xs">function</Badge>
-                    <Badge variant="secondary" className="text-xs">return</Badge>
-                    <Badge variant="secondary" className="text-xs">call function</Badge>
-                  </div>
-                </div>
+            <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+              <h4 className="font-medium text-sm mb-2 text-amber-800 dark:text-amber-200">Advanced Block Manipulation</h4>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
+                Chain commands for complex operations:
+              </p>
+              <div className="text-xs text-amber-600 dark:text-amber-400 space-y-1">
+                <div>• "select first block, move right, move down, duplicate selected block"</div>
+                <div>• "select all blocks, move up, connect blocks"</div>
+                <div>• Movement: "move" (50px) vs "nudge" (10px) for precision</div>
+                <div>• Selected blocks pulse with red glow and provide audio feedback</div>
               </div>
             </div>
 
