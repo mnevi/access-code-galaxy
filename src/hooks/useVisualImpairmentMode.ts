@@ -122,7 +122,7 @@ export function useVisualImpairmentMode() {
     root.setAttribute('data-visual-theme', settings.colorScheme);
     root.setAttribute('data-contrast', settings.contrastMode);
     
-    // Apply font size directly to root (using same ratios as neurodivergent mode)
+    // Apply CSS custom properties instead of direct styles to avoid global effects
     const fontSizeMap = {
       medium: '1rem',        // same as neurodivergent medium
       large: '1.125rem',     // same as neurodivergent large 
@@ -130,42 +130,42 @@ export function useVisualImpairmentMode() {
       huge: '1.375rem',      // scaled proportionally
       massive: '1.5rem'      // scaled proportionally
     };
-    root.style.fontSize = fontSizeMap[settings.fontSize];
+    root.style.setProperty('--visual-font-size', fontSizeMap[settings.fontSize]);
     
-    // Apply font weight directly to root
+    // Apply font weight as custom property
     const fontWeightMap = {
       normal: '400',
       medium: '500',
       bold: '700',
       'extra-bold': '800'
     };
-    root.style.fontWeight = fontWeightMap[settings.fontWeight];
+    root.style.setProperty('--visual-font-weight', fontWeightMap[settings.fontWeight]);
     
-    // Apply line spacing directly to root
+    // Apply line spacing as custom property 
     const lineSpacingMap = {
       normal: '1.5',
       relaxed: '1.6',
       loose: '1.8',
       'extra-loose': '2.0'
     };
-    root.style.lineHeight = lineSpacingMap[settings.lineSpacing];
+    root.style.setProperty('--visual-line-height', lineSpacingMap[settings.lineSpacing]);
     
-    // Apply letter spacing directly to root
+    // Apply letter spacing as custom property
     const letterSpacingMap = {
       normal: '0',
       wide: '0.025em',
       wider: '0.05em',
       widest: '0.1em'
     };
-    root.style.letterSpacing = letterSpacingMap[settings.letterSpacing];
+    root.style.setProperty('--visual-letter-spacing', letterSpacingMap[settings.letterSpacing]);
     
-    // Apply font family directly to root
+    // Apply font family as custom property
     if (settings.fontFamily === 'sans-serif') {
-      root.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      root.style.setProperty('--visual-font-family', 'Arial, Helvetica, sans-serif');
     } else if (settings.fontFamily === 'high-readability') {
-      root.style.fontFamily = 'Verdana, Geneva, sans-serif';
+      root.style.setProperty('--visual-font-family', 'Verdana, Geneva, sans-serif');
     } else {
-      root.style.fontFamily = '';
+      root.style.setProperty('--visual-font-family', '');
     }
     
     // Apply CSS classes to the root element with visual-impairment-mode class
@@ -222,11 +222,11 @@ export function useVisualImpairmentMode() {
     return () => {
       root.removeAttribute('data-visual-theme');
       root.removeAttribute('data-contrast');
-      root.style.fontSize = '';
-      root.style.fontWeight = '';
-      root.style.lineHeight = '';
-      root.style.letterSpacing = '';
-      root.style.fontFamily = '';
+      root.style.removeProperty('--visual-font-size');
+      root.style.removeProperty('--visual-font-weight');
+      root.style.removeProperty('--visual-line-height');
+      root.style.removeProperty('--visual-letter-spacing');
+      root.style.removeProperty('--visual-font-family');
       root.classList.remove(
         'visual-highlight-links',
         'visual-underline-links',

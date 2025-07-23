@@ -356,6 +356,14 @@ All colors MUST be HSL for accessibility and theming.
   }
 
   /* Visual Impairment Mode Styles */
+  .visual-impairment-mode {
+    font-size: var(--visual-font-size, 1rem);
+    font-weight: var(--visual-font-weight, 400);
+    line-height: var(--visual-line-height, 1.5);
+    letter-spacing: var(--visual-letter-spacing, 0);
+    font-family: var(--visual-font-family, inherit);
+  }
+
   .visual-impairment-mode *:focus {
     outline: var(--visual-focus-width, 2px) solid hsl(var(--primary)) !important;
     outline-offset: 4px !important;
