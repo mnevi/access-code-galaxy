@@ -90,16 +90,12 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       // Apply immediate theme changes for accessibility modes
       if (mode.id === 'neurodivergent') {
         document.documentElement.classList.add('neurodivergent-mode');
-        document.documentElement.classList.remove('visual-impairment-mode');
-      } else if (mode.id === 'visual') {
-        document.documentElement.classList.add('visual-impairment-mode');
-        document.documentElement.classList.remove('neurodivergent-mode');
       } else {
-        document.documentElement.classList.remove('neurodivergent-mode', 'visual-impairment-mode');
+        document.documentElement.classList.remove('neurodivergent-mode');
       }
     } else {
       localStorage.removeItem('accessibility-mode');
-      document.documentElement.classList.remove('neurodivergent-mode', 'visual-impairment-mode');
+      document.documentElement.classList.remove('neurodivergent-mode');
     }
   };
 
