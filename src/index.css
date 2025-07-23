@@ -148,6 +148,49 @@ All colors MUST be HSL for accessibility and theming.
     --destructive: 0 100% 40%;
     --destructive-foreground: 0 0% 100%;
   }
+
+  /* Hearing Impairment Themes */
+  [data-hearing-theme="high-contrast"] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --primary: 240 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 85%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 15%;
+    --accent: 0 100% 45%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 100%;
+    --ring: 240 100% 50%;
+  }
+
+  [data-hearing-theme="bright"] {
+    --background: 60 100% 97%;
+    --foreground: 0 0% 5%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+    --primary: 220 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 30% 90%;
+    --secondary-foreground: 0 0% 5%;
+    --muted: 60 30% 92%;
+    --muted-foreground: 0 0% 25%;
+    --accent: 120 100% 35%;
+    --accent-foreground: 0 0% 100%;
+    --success: 120 100% 35%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 100% 45%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 100% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 80%;
+    --input: 0 0% 100%;
+    --ring: 220 100% 40%;
+  }
 }
 
 @layer base {
@@ -308,5 +351,120 @@ All colors MUST be HSL for accessibility and theming.
   .neurodivergent-mode-overlay {
     backdrop-filter: blur(16px);
     background: hsla(var(--background) / 0.85);
+  }
+
+  /* Hearing Impairment Mode Styles */
+  .hearing-enhanced-focus *:focus {
+    outline: 3px solid hsl(var(--primary)) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 6px hsl(var(--primary) / 0.2) !important;
+  }
+
+  .hearing-reduced-clutter .secondary-content {
+    display: none;
+  }
+
+  /* Visual notification styles */
+  .hearing-visual-notification {
+    font-size: var(--hearing-font-size, 1rem);
+    font-weight: var(--hearing-font-weight, 600);
+    line-height: var(--hearing-line-height, 1.5);
+    border-width: var(--hearing-border-width, 2px);
+  }
+
+  /* Hearing impairment button and icon scaling */
+  [data-hearing-theme] button {
+    transform: scale(var(--hearing-button-scale, 1));
+    font-size: var(--hearing-font-size, 1rem);
+    font-weight: var(--hearing-font-weight, 500);
+    border-width: var(--hearing-border-width, 1px);
+  }
+
+  [data-hearing-theme] .icon {
+    transform: scale(var(--hearing-icon-scale, 1));
+  }
+
+  [data-hearing-theme] * {
+    margin: calc(var(--hearing-spacing-scale, 1) * 1rem);
+    padding: calc(var(--hearing-spacing-scale, 1) * 0.5rem);
+  }
+
+  /* Visual notification animations */
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes flash {
+    0%, 50%, 100% {
+      opacity: 1;
+    }
+    25%, 75% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Enhanced visual feedback for hearing impaired users */
+  [data-hearing-theme] .success-indicator {
+    border: 3px solid hsl(var(--success));
+    background: hsl(var(--success) / 0.1);
+    animation: success-pulse 1s ease-in-out;
+  }
+
+  [data-hearing-theme] .error-indicator {
+    border: 3px solid hsl(var(--destructive));
+    background: hsl(var(--destructive) / 0.1);
+    animation: error-shake 0.5s ease-in-out;
+  }
+
+  [data-hearing-theme] .warning-indicator {
+    border: 3px solid hsl(var(--warning));
+    background: hsl(var(--warning) / 0.1);
+    animation: warning-bounce 0.8s ease-in-out;
+  }
+
+  @keyframes success-pulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--success) / 0.4);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 0 0 10px hsl(var(--success) / 0);
+    }
+  }
+
+  @keyframes error-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  @keyframes warning-bounce {
+    0%, 100% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(-5px);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
   }
 }

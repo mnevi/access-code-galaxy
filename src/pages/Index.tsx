@@ -9,8 +9,10 @@ import { ChallengeService } from "@/services/challengeService";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccessibility, accessibilityModes } from "@/contexts/AccessibilityContext";
 import { useNeurodivergentMode } from "@/hooks/useNeurodivergentMode";
+import { useHearingImpairmentMode } from "@/hooks/useHearingImpairmentMode";
 import NeurodivergentModeIndicator from "@/components/NeurodivergentModeIndicator";
 import NeurodivergentModeSettingsDialog from "@/components/NeurodivergentModeSettingsDialog";
+import { HearingImpairmentSettingsDialog } from "@/components/HearingImpairmentSettingsDialog";
 import { 
   Zap, 
   Trophy, 
@@ -35,8 +37,10 @@ const Index = () => {
   const [challenges, setChallenges] = useState([]);
   const [userStats, setUserStats] = useState({ xpPoints: 0, challengesCompleted: 0, currentStreak: 0 });
   const [showSettings, setShowSettings] = useState(false);
+  const [showHearingSettings, setShowHearingSettings] = useState(false);
   const { setMode } = useAccessibility();
   const { isActive } = useNeurodivergentMode();
+  const { isActive: isHearingActive } = useHearingImpairmentMode();
 
   const uiAccessibilityModes = [
     {
@@ -497,10 +501,29 @@ const Index = () => {
         />
       )}
 
+      {/* Hearing Impairment Mode Indicator - Simple floating button */}
+      {isHearingActive && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Button
+            onClick={() => setShowHearingSettings(true)}
+            className="rounded-full w-12 h-12 bg-primary hover:bg-primary/90 shadow-lg"
+            size="sm"
+          >
+            🔊
+          </Button>
+        </div>
+      )}
+
       {/* Neurodivergent Mode Settings Dialog */}
       <NeurodivergentModeSettingsDialog 
         open={showSettings}
         onOpenChange={setShowSettings}
+      />
+
+      {/* Hearing Impairment Settings Dialog */}
+      <HearingImpairmentSettingsDialog 
+        open={showHearingSettings}
+        onOpenChange={setShowHearingSettings}
       />
     </div>
   );
