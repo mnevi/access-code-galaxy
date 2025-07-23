@@ -48,11 +48,16 @@ const BlocklyWorkspace = () => {
         },
       });
 
+      // Register custom blocks using the utils file
+      if (BlocklyUtils && typeof BlocklyUtils.registerCustomBlocks === 'function') {
+        BlocklyUtils.registerCustomBlocks(Blockly);
+      }
+
       window.blocklyWorkspace = workspaceRef.current;
       window.BlocklyUtils = BlocklyUtils;
 
       workspaceRef.current.addChangeListener(() =>
-          generateCode(languageRef.current)
+        generateCode(languageRef.current)
       );
     }
 
@@ -153,7 +158,7 @@ const BlocklyWorkspace = () => {
             <button onClick={handleClear} className="clear-btn">Clear</button>
             <button
                 onClick={() => {
-                  toggleVoiceRecognition(window.blocklyWorkspace, window.BlocklyUtils);
+                  toggleVoiceRecognition(window.blocklyWorkspace, BlocklyUtils);
                   setIsVoiceOn(!isVoiceOn);
                 }}
                 className="voice-btn"
