@@ -298,4 +298,15 @@ All colors MUST be HSL for accessibility and theming.
   .neurodivergent-mode .syntax-highlight .number {
     @apply text-warning;
   }
+
+  /* Enhanced blur effects for settings dialog */
+  .settings-backdrop-blur {
+    backdrop-filter: blur(20px) saturate(180%);
+    background: hsla(var(--background) / 0.75);
+  }
+  
+  .neurodivergent-mode-overlay {
+    backdrop-filter: blur(16px);
+    background: hsla(var(--background) / 0.85);
+  }
 }

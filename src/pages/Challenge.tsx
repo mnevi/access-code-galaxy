@@ -5,6 +5,7 @@ import BlocklyWorkspace from "../components/blockly/BlocklyWorkspace.jsx";
 import { ChallengeService } from "../services/challengeService";
 import { useNeurodivergentMode } from "@/hooks/useNeurodivergentMode";
 import NeurodivergentModeIndicator from "@/components/NeurodivergentModeIndicator";
+import NeurodivergentModeSettingsDialog from "@/components/NeurodivergentModeSettingsDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -110,7 +111,7 @@ const Challenge: React.FC = () => {
   }
 
   return (
-    <div className={`flex flex-col min-h-screen ${isActive ? 'neurodivergent-mode' : ''}`}>
+    <div className={`flex flex-col min-h-screen ${isActive ? 'neurodivergent-mode' : ''} ${showSettings ? 'overflow-hidden' : ''}`}>
       {/* Break Mode Overlay */}
       {isActive && isOnBreak && (
         <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-40 flex items-center justify-center">
@@ -131,6 +132,11 @@ const Challenge: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Background Blur Overlay for Settings */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-background/50 backdrop-blur-md z-30" />
       )}
 
       {/* Challenge Header */}
@@ -211,27 +217,11 @@ const Challenge: React.FC = () => {
         />
       )}
 
-      {/* Settings Modal would go here */}
-      {showSettings && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-background border rounded-lg shadow-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Neurodivergent Mode Settings</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowSettings(false)}
-              >
-                ×
-              </Button>
-            </div>
-            <div className="p-4">
-              {/* Settings component would be imported and used here */}
-              <p className="text-muted-foreground">Settings panel coming soon...</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Neurodivergent Mode Settings Dialog */}
+      <NeurodivergentModeSettingsDialog 
+        open={showSettings}
+        onOpenChange={setShowSettings}
+      />
     </div>
   );
 };

@@ -8,6 +8,9 @@ import StatsCard from "@/components/StatsCard";
 import { ChallengeService } from "@/services/challengeService";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccessibility, accessibilityModes } from "@/contexts/AccessibilityContext";
+import { useNeurodivergentMode } from "@/hooks/useNeurodivergentMode";
+import NeurodivergentModeIndicator from "@/components/NeurodivergentModeIndicator";
+import NeurodivergentModeSettingsDialog from "@/components/NeurodivergentModeSettingsDialog";
 import { 
   Zap, 
   Trophy, 
@@ -31,7 +34,9 @@ const Index = () => {
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [challenges, setChallenges] = useState([]);
   const [userStats, setUserStats] = useState({ xpPoints: 0, challengesCompleted: 0, currentStreak: 0 });
+  const [showSettings, setShowSettings] = useState(false);
   const { setMode } = useAccessibility();
+  const { isActive } = useNeurodivergentMode();
 
   const uiAccessibilityModes = [
     {
@@ -201,7 +206,12 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${showSettings ? 'overflow-hidden' : ''}`}>
+      {/* Background Blur Overlay for Settings */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-background/50 backdrop-blur-md z-30" />
+      )}
+      
       <Header />
       
       {/* Hero Section */}
@@ -479,6 +489,19 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {/* Neurodivergent Mode Indicator */}
+      {isActive && (
+        <NeurodivergentModeIndicator 
+          onOpenSettings={() => setShowSettings(true)}
+        />
+      )}
+
+      {/* Neurodivergent Mode Settings Dialog */}
+      <NeurodivergentModeSettingsDialog 
+        open={showSettings}
+        onOpenChange={setShowSettings}
+      />
     </div>
   );
 };
