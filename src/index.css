@@ -117,7 +117,7 @@ All colors MUST be HSL for accessibility and theming.
   }
 
   /* High Contrast Theme */
-  [data-theme="high-contrast"] {
+  [data-theme="high-contrast"], [data-contrast="high"] {
     --background: 0 0% 100%;
     --foreground: 0 0% 0%;
     --card: 0 0% 100%;
@@ -133,6 +133,44 @@ All colors MUST be HSL for accessibility and theming.
     --border: 0 0% 0%;
     --input: 0 0% 100%;
     --ring: 240 100% 50%;
+  }
+
+  /* Extra High Contrast Theme */
+  [data-contrast="extra-high"] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --primary: 240 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 85%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 10%;
+    --accent: 0 100% 40%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 100%;
+    --ring: 240 100% 40%;
+  }
+
+  /* Inverted Colors Theme */
+  [data-contrast="inverted"] {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
+    --primary: 240 100% 70%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 80%;
+    --accent: 0 100% 70%;
+    --accent-foreground: 0 0% 0%;
+    --border: 0 0% 100%;
+    --input: 0 0% 5%;
+    --ring: 240 100% 70%;
   }
 
   /* Color Blind Friendly Theme */
@@ -453,5 +491,116 @@ All colors MUST be HSL for accessibility and theming.
       transform: translateY(-5px);
       animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
     }
+  }
+
+  /* Visual Impairment Mode Styles */
+  .visual-enhanced-focus *:focus {
+    outline: var(--visual-focus-width, 2px) solid hsl(var(--primary)) !important;
+    outline-offset: 4px !important;
+    box-shadow: 0 0 0 calc(var(--visual-focus-width, 2px) * 2) hsl(var(--primary) / 0.2) !important;
+  }
+
+  .visual-highlight-links a {
+    background-color: hsl(var(--primary) / 0.1);
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  .visual-underline-links a {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 4px !important;
+  }
+
+  .visual-reduce-motion * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .visual-increased-spacing {
+    line-height: 1.8 !important;
+  }
+
+  .visual-increased-spacing * {
+    margin-bottom: 1.5rem !important;
+    padding: 1rem !important;
+  }
+
+  .visual-simplified-layout .secondary-content,
+  .visual-simplified-layout .decorative-element {
+    display: none !important;
+  }
+
+  .visual-remove-backgrounds {
+    background: hsl(var(--background)) !important;
+  }
+
+  .visual-remove-backgrounds * {
+    background: transparent !important;
+    background-image: none !important;
+  }
+
+  .visual-monochrome {
+    filter: grayscale(100%);
+  }
+
+  /* Cursor size enhancement */
+  .visual-enhanced-cursor {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M2 2l28 12-12 4-4 12z" fill="black" stroke="white" stroke-width="2"/></svg>'), auto !important;
+  }
+
+  [data-visual-theme] * {
+    cursor: inherit;
+  }
+
+  /* Skip links for better navigation */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+    border-radius: 4px;
+  }
+
+  .skip-link:focus {
+    top: 6px;
+  }
+
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Landmark navigation indicators */
+  [data-visual-theme] main::before {
+    content: "Main Content";
+    display: block;
+    font-size: 0.875rem;
+    font-weight: bold;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+    padding-bottom: 0.5rem;
+  }
+
+  [data-visual-theme] nav::before {
+    content: "Navigation";
+    display: block;
+    font-size: 0.875rem;
+    font-weight: bold;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 0.5rem;
   }
 }

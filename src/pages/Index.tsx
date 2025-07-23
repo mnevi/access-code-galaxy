@@ -10,9 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccessibility, accessibilityModes } from "@/contexts/AccessibilityContext";
 import { useNeurodivergentMode } from "@/hooks/useNeurodivergentMode";
 import { useHearingImpairmentMode } from "@/hooks/useHearingImpairmentMode";
+import { useVisualImpairmentMode } from "@/hooks/useVisualImpairmentMode";
 import NeurodivergentModeIndicator from "@/components/NeurodivergentModeIndicator";
 import NeurodivergentModeSettingsDialog from "@/components/NeurodivergentModeSettingsDialog";
 import { HearingImpairmentSettingsDialog } from "@/components/HearingImpairmentSettingsDialog";
+import { VisualImpairmentSettingsDialog } from "@/components/VisualImpairmentSettingsDialog";
 import { 
   Zap, 
   Trophy, 
@@ -38,9 +40,11 @@ const Index = () => {
   const [userStats, setUserStats] = useState({ xpPoints: 0, challengesCompleted: 0, currentStreak: 0 });
   const [showSettings, setShowSettings] = useState(false);
   const [showHearingSettings, setShowHearingSettings] = useState(false);
+  const [showVisualSettings, setShowVisualSettings] = useState(false);
   const { setMode } = useAccessibility();
   const { isActive } = useNeurodivergentMode();
   const { isActive: isHearingActive } = useHearingImpairmentMode();
+  const { isActive: isVisualActive } = useVisualImpairmentMode();
 
   const uiAccessibilityModes = [
     {
@@ -514,6 +518,19 @@ const Index = () => {
         </div>
       )}
 
+      {/* Visual Impairment Mode Indicator - Simple floating button */}
+      {isVisualActive && (
+        <div className="fixed bottom-4 left-4 z-50">
+          <Button
+            onClick={() => setShowVisualSettings(true)}
+            className="rounded-full w-12 h-12 bg-primary hover:bg-primary/90 shadow-lg"
+            size="sm"
+          >
+            👁️
+          </Button>
+        </div>
+      )}
+
       {/* Neurodivergent Mode Settings Dialog */}
       <NeurodivergentModeSettingsDialog 
         open={showSettings}
@@ -524,6 +541,12 @@ const Index = () => {
       <HearingImpairmentSettingsDialog 
         open={showHearingSettings}
         onOpenChange={setShowHearingSettings}
+      />
+
+      {/* Visual Impairment Settings Dialog */}
+      <VisualImpairmentSettingsDialog 
+        open={showVisualSettings}
+        onOpenChange={setShowVisualSettings}
       />
     </div>
   );
