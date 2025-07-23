@@ -16,6 +16,37 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
 
   // Voice commands for block placement
   const blockCommands = {
+    // Block selection commands
+    'select first block': 'SELECT_FIRST',
+    'select last block': 'SELECT_LAST', 
+    'select next block': 'SELECT_NEXT',
+    'select previous block': 'SELECT_PREVIOUS',
+    'select block': 'SELECT_CYCLE',
+    'deselect block': 'DESELECT',
+    'select all blocks': 'SELECT_ALL',
+    
+    // Block movement commands
+    'move up': 'MOVE_UP',
+    'move down': 'MOVE_DOWN',
+    'move left': 'MOVE_LEFT',
+    'move right': 'MOVE_RIGHT',
+    'move block up': 'MOVE_UP',
+    'move block down': 'MOVE_DOWN',
+    'move block left': 'MOVE_LEFT',
+    'move block right': 'MOVE_RIGHT',
+    
+    // Fine movement commands
+    'nudge up': 'NUDGE_UP',
+    'nudge down': 'NUDGE_DOWN',
+    'nudge left': 'NUDGE_LEFT',
+    'nudge right': 'NUDGE_RIGHT',
+    
+    // Block manipulation commands
+    'delete selected block': 'DELETE_SELECTED',
+    'duplicate selected block': 'DUPLICATE_SELECTED',
+    'connect blocks': 'CONNECT_BLOCKS',
+    'disconnect block': 'DISCONNECT_BLOCK',
+    
     // Control blocks
     'repeat': 'controls_repeat',
     'loop': 'controls_repeat',
@@ -52,6 +83,16 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
     'function': 'procedures_defnoreturn',
     'return': 'procedures_defreturn',
     'call function': 'procedures_callnoreturn',
+    
+    // Workspace commands
+    'zoom in': 'ZOOM_IN',
+    'zoom out': 'ZOOM_OUT',
+    'center workspace': 'CENTER_WORKSPACE',
+    'clear workspace': 'CLEAR_WORKSPACE',
+    'undo': 'UNDO',
+    'redo': 'REDO',
+    'run code': 'RUN_CODE',
+    'clear code': 'CLEAR_CODE'
   };
 
   const parseCommand = (text: string): { command: string; blockType: string } | null => {

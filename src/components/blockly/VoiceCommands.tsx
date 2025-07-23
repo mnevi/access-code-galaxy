@@ -65,8 +65,8 @@ const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) 
           <DialogHeader>
             <DialogTitle>Voice Commands for Block Placement</DialogTitle>
           </DialogHeader>
-          <div className="space-y-6">
-            <div>
+          <div className="space-y-6" aria-describedby="voice-commands-description">
+            <div id="voice-commands-description">
               <h3 className="text-lg font-semibold mb-3">How to Use Voice Commands</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Click "Voice Commands" and speak clearly. You can say phrases like:
@@ -76,6 +76,8 @@ const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) 
                 <li>"Add if statement"</li>
                 <li>"Create repeat loop"</li>
                 <li>"Insert text block"</li>
+                <li>"Select first block"</li>
+                <li>"Move right, duplicate selected block"</li>
               </ul>
             </div>
 
