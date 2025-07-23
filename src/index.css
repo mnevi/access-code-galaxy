@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -58,21 +59,15 @@ All colors MUST be HSL for accessibility and theming.
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --animation-duration: 0.3s;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -120,6 +115,39 @@ All colors MUST be HSL for accessibility and theming.
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* High Contrast Theme */
+  [data-theme="high-contrast"] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --primary: 240 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 20%;
+    --accent: 0 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 100%;
+    --ring: 240 100% 50%;
+  }
+
+  /* Color Blind Friendly Theme */
+  [data-theme="color-blind-friendly"] {
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 30 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --success: 120 100% 25%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 100% 50%;
+    --warning-foreground: 0 0% 0%;
+    --destructive: 0 100% 40%;
+    --destructive-foreground: 0 0% 100%;
+  }
 }
 
 @layer base {
@@ -134,6 +162,34 @@ All colors MUST be HSL for accessibility and theming.
   /* Smooth scrolling for better UX */
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Neurodivergent Mode Styles */
+  .neurodivergent-mode {
+    * {
+      animation-duration: var(--animation-duration) !important;
+      transition-duration: var(--animation-duration) !important;
+    }
+  }
+
+  .neurodivergent-mode [data-animations="false"] * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Focus styles for better keyboard navigation */
+  .neurodivergent-mode *:focus {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+
+  /* Reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .neurodivergent-mode * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
@@ -176,6 +232,19 @@ All colors MUST be HSL for accessibility and theming.
     @apply border-primary bg-primary/5 shadow-glow;
   }
 
+  /* Neurodivergent mode specific styles */
+  .neurodivergent-mode .mode-card {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+
+  .neurodivergent-mode .gentle-error {
+    @apply bg-orange-50 border-orange-200 text-orange-800 p-4 rounded-lg;
+  }
+
+  .neurodivergent-mode .celebration {
+    @apply bg-green-50 border-green-200 text-green-800 p-4 rounded-lg;
+  }
+
   /* Floating animation */
   .float-animation {
     animation: float 3s ease-in-out infinite;
@@ -194,5 +263,39 @@ All colors MUST be HSL for accessibility and theming.
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.2); }
     50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.4); }
+  }
+
+  /* Timer styles */
+  .timer-display {
+    @apply font-mono text-2xl font-bold;
+  }
+
+  .timer-active {
+    @apply text-primary;
+  }
+
+  .timer-break {
+    @apply text-warning;
+  }
+
+  /* Syntax highlighting improvements for neurodivergent mode */
+  .neurodivergent-mode .syntax-highlight {
+    @apply leading-relaxed;
+  }
+
+  .neurodivergent-mode .syntax-highlight .keyword {
+    @apply font-semibold text-primary;
+  }
+
+  .neurodivergent-mode .syntax-highlight .string {
+    @apply text-success;
+  }
+
+  .neurodivergent-mode .syntax-highlight .comment {
+    @apply text-muted-foreground italic;
+  }
+
+  .neurodivergent-mode .syntax-highlight .number {
+    @apply text-warning;
   }
 }

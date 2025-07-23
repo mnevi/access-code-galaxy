@@ -64,6 +64,7 @@ interface AccessibilityContextType {
   currentMode: AccessibilityMode | null;
   setMode: (mode: AccessibilityMode | null) => void;
   features: AccessibilityMode['features'];
+  neurodivergentSettings?: any;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -80,13 +81,21 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     }
   }, []);
 
-  // Save mode to localStorage
+  // Save mode to localStorage and apply theme changes
   const setMode = (mode: AccessibilityMode | null) => {
     setCurrentMode(mode);
     if (mode) {
       localStorage.setItem('accessibility-mode', mode.id);
+      
+      // Apply immediate theme changes for neurodivergent mode
+      if (mode.id === 'neurodivergent') {
+        document.documentElement.classList.add('neurodivergent-mode');
+      } else {
+        document.documentElement.classList.remove('neurodivergent-mode');
+      }
     } else {
       localStorage.removeItem('accessibility-mode');
+      document.documentElement.classList.remove('neurodivergent-mode');
     }
   };
 

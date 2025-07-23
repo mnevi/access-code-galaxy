@@ -1,36 +1,237 @@
+
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import BlocklyWorkspace from "../components/blockly/BlocklyWorkspace.jsx";
 import { ChallengeService } from "../services/challengeService";
+import { useNeurodivergentMode } from "@/hooks/useNeurodivergentMode";
+import NeurodivergentModeIndicator from "@/components/NeurodivergentModeIndicator";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { 
+  BookOpen, 
+  Clock, 
+  Zap, 
+  Heart, 
+  RotateCcw, 
+  Settings2,
+  Play,
+  Pause
+} from "lucide-react";
 
 const Challenge: React.FC = () => {
   const [searchParams] = useSearchParams();
   const challengeId = searchParams.get('id') || 'html-basics';
   const [challenge, setChallenge] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  
+  const { 
+    isActive, 
+    settings, 
+    playAudioCue, 
+    speak,
+    sessionTimer,
+    isOnBreak 
+  } = useNeurodivergentMode();
 
   useEffect(() => {
     const challengeData = ChallengeService.getChallengeById(challengeId);
     setChallenge(challengeData);
-  }, [challengeId]);
+    
+    if (isActive && challengeData) {
+      // Announce challenge when loaded
+      const description = `Challenge loaded: ${challengeData.title}. ${challengeData.description}`;
+      if (settings.textToSpeechEnabled) {
+        speak(description);
+      }
+      if (settings.audioCuesEnabled) {
+        playAudioCue('notification');
+      }
+    }
+  }, [challengeId, isActive, settings.textToSpeechEnabled, settings.audioCuesEnabled]);
+
+  const handleProgressUpdate = (newProgress: number) => {
+    setProgress(newProgress);
+    
+    if (isActive && settings.celebrateProgress) {
+      if (newProgress === 100) {
+        playAudioCue('success');
+        if (settings.textToSpeechEnabled) {
+          speak('Congratulations! Challenge completed successfully!');
+        }
+      } else if (newProgress > progress && newProgress % 25 === 0) {
+        playAudioCue('notification');
+        if (settings.textToSpeechEnabled) {
+          speak(`Great progress! You're ${newProgress}% complete.`);
+        }
+      }
+    }
+  };
+
+  const handleError = (error: string) => {
+    setAttempts(prev => prev + 1);
+    
+    if (isActive) {
+      playAudioCue('error');
+      
+      if (settings.gentleErrorMessages) {
+        const gentleMessage = `Don't worry, that's part of learning! ${error}. You can try again.`;
+        if (settings.textToSpeechEnabled) {
+          speak(gentleMessage);
+        }
+      }
+    }
+  };
+
+  const handleRetry = () => {
+    setProgress(0);
+    setAttempts(0);
+    
+    if (isActive) {
+      playAudioCue('notification');
+      if (settings.textToSpeechEnabled) {
+        speak('Starting fresh! Take your time.');
+      }
+    }
+  };
 
   if (!challenge) {
-    return <div className="flex justify-center items-center h-screen">Loading challenge...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading challenge...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="w-full max-w-6xl shadow-lg rounded-xl bg-white p-6">
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold mb-2">{challenge.title}</h2>
-          <p className="text-gray-600 mb-2">{challenge.description}</p>
-          <div className="flex gap-4 text-sm text-gray-500">
-            <span>Difficulty: {challenge.difficulty}</span>
-            <span>Time: {challenge.estimatedTime}</span>
-            <span>XP Reward: {challenge.xpReward}</span>
+    <div className={`flex flex-col min-h-screen ${isActive ? 'neurodivergent-mode' : ''}`}>
+      {/* Break Mode Overlay */}
+      {isActive && isOnBreak && (
+        <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-40 flex items-center justify-center">
+          <Card className="w-96 text-center">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-center gap-2">
+                <Pause className="h-5 w-5" />
+                Break Time
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Take a moment to rest and recharge. Your progress is saved!
+              </p>
+              <div className="text-2xl font-mono text-primary">
+                {/* Timer will be shown here */}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Challenge Header */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <BookOpen className="h-8 w-8 text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold">{challenge.title}</h1>
+                <p className="text-muted-foreground">{challenge.description}</p>
+              </div>
+            </div>
+            
+            {isActive && settings.allowLessonRepeat && (
+              <Button 
+                variant="outline" 
+                onClick={handleRetry}
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Retry
+              </Button>
+            )}
+          </div>
+
+          {/* Challenge Info */}
+          <div className="flex flex-wrap gap-4 mb-4">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Zap className="h-3 w-3" />
+              {challenge.difficulty}
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {challenge.estimatedTime}
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Heart className="h-3 w-3" />
+              {challenge.xpReward} XP
+            </Badge>
+            
+            {isActive && settings.allowLessonRepeat && attempts > 0 && (
+              <Badge variant="outline">
+                Attempt {attempts + 1}
+              </Badge>
+            )}
+          </div>
+
+          {/* Progress Bar */}
+          {isActive && settings.showProgressIndicators && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Progress</span>
+                <span>{progress}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 p-6">
+        <div className="max-w-6xl mx-auto">
+          <BlocklyWorkspace 
+            challengeId={challengeId}
+            onProgressUpdate={handleProgressUpdate}
+            onError={handleError}
+            neurodivergentMode={isActive ? settings : null}
+          />
+        </div>
+      </div>
+
+      {/* Neurodivergent Mode Indicator */}
+      {isActive && (
+        <NeurodivergentModeIndicator 
+          onOpenSettings={() => setShowSettings(true)}
+        />
+      )}
+
+      {/* Settings Modal would go here */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-background border rounded-lg shadow-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Neurodivergent Mode Settings</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSettings(false)}
+              >
+                ×
+              </Button>
+            </div>
+            <div className="p-4">
+              {/* Settings component would be imported and used here */}
+              <p className="text-muted-foreground">Settings panel coming soon...</p>
+            </div>
           </div>
         </div>
-        <BlocklyWorkspace challengeId={challengeId} />
-      </div>
+      )}
     </div>
   );
 };
