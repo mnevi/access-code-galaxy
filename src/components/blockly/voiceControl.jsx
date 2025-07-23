@@ -498,30 +498,75 @@ export function duplicateSelectedBlock() {
 export function connectSelectedBlocks() {
   if (!workspace) return;
 
-  // Helper to get all connectable connections (INPUT/OUTPUT, PREVIOUS/NEXT)
-  function getConnectableConnections(block) {
-    return [
-      ...(block.inputList || []).map(input => input.connection).filter(Boolean),
-      block.outputConnection,
-      block.previousConnection,
-      block.nextConnection
-    ].filter(Boolean);
+  // Helper to get all connectable connections
+  function getAllConnections(block) {
+    const connections = [];
+    
+    // Get input connections
+    if (block.inputList) {
+      block.inputList.forEach(input => {
+        if (input.connection) {
+          connections.push(input.connection);
+        }
+      });
+    }
+    
+    // Get output, previous, and next connections
+    if (block.outputConnection) connections.push(block.outputConnection);
+    if (block.previousConnection) connections.push(block.previousConnection);
+    if (block.nextConnection) connections.push(block.nextConnection);
+    
+    return connections;
   }
 
-  // If we have multiple highlighted blocks, use those
+  // Helper to check if two connections can connect
+  function canConnect(conn1, conn2) {
+    if (!conn1 || !conn2) return false;
+    if (conn1.isConnected() || conn2.isConnected()) return false;
+    
+    try {
+      // Use Blockly's connection checking
+      if (conn1.checkConnection && conn2.checkConnection) {
+        return conn1.checkConnection(conn2) === null && conn2.checkConnection(conn1) === null;
+      }
+      
+      // Fallback: check connection types
+      const type1 = conn1.type;
+      const type2 = conn2.type;
+      
+      // Compatible connection types
+      return (
+        (type1 === Blockly.NEXT_STATEMENT && type2 === Blockly.PREVIOUS_STATEMENT) ||
+        (type1 === Blockly.PREVIOUS_STATEMENT && type2 === Blockly.NEXT_STATEMENT) ||
+        (type1 === Blockly.OUTPUT_VALUE && type2 === Blockly.INPUT_VALUE) ||
+        (type1 === Blockly.INPUT_VALUE && type2 === Blockly.OUTPUT_VALUE)
+      );
+    } catch (error) {
+      console.warn('Error checking connection compatibility:', error);
+      return false;
+    }
+  }
+
+  // If we have multiple highlighted blocks, try to connect them
   if (highlightedBlocks.length >= 2) {
     try {
       const [block1, block2] = highlightedBlocks;
-      const connections1 = getConnectableConnections(block1);
-      const connections2 = getConnectableConnections(block2);
+      const connections1 = getAllConnections(block1);
+      const connections2 = getAllConnections(block2);
+
+      console.log('Attempting to connect highlighted blocks:', block1.type, 'and', block2.type);
 
       for (const conn1 of connections1) {
         for (const conn2 of connections2) {
-          // Only connect if not already connected and types are compatible
-          if (!conn1.isConnected() && !conn2.isConnected() && conn1.canConnectWithReason && conn1.canConnectWithReason(conn2) === Blockly.Connection.CAN_CONNECT) {
-            conn1.connect(conn2);
-            announceToScreenReader('Blocks connected successfully');
-            return;
+          if (canConnect(conn1, conn2)) {
+            try {
+              conn1.connect(conn2);
+              announceToScreenReader(`Connected ${block1.type.replace(/_/g, ' ')} to ${block2.type.replace(/_/g, ' ')}`);
+              return;
+            } catch (connectError) {
+              console.warn('Failed to connect:', connectError);
+              continue;
+            }
           }
         }
       }
@@ -533,31 +578,39 @@ export function connectSelectedBlocks() {
     return;
   }
 
-  // If we only have one selected block, try to connect it to nearby blocks
+  // If only one block is selected, try to connect to nearby blocks
   if (selectedBlock) {
     try {
       const allBlocks = workspace.getTopBlocks(false);
       const nearbyBlocks = allBlocks.filter(block =>
         block !== selectedBlock &&
-        isBlockNearby(selectedBlock, block, 100) // Within 100 pixels
+        isBlockNearby(selectedBlock, block, 150) // Within 150 pixels
       );
 
       if (nearbyBlocks.length === 0) {
-        announceToScreenReader('No nearby blocks to connect to. Select multiple blocks first.');
+        announceToScreenReader('No nearby blocks to connect to. Try selecting multiple blocks first.');
         return;
       }
 
-      // Try to connect to the nearest compatible block
-      for (const nearbyBlock of nearbyBlocks) {
-        const connections1 = getConnectableConnections(selectedBlock);
-        const connections2 = getConnectableConnections(nearbyBlock);
+      console.log('Attempting to connect to nearby blocks:', nearbyBlocks.map(b => b.type));
 
-        for (const conn1 of connections1) {
-          for (const conn2 of connections2) {
-            if (!conn1.isConnected() && !conn2.isConnected() && conn1.canConnectWithReason && conn1.canConnectWithReason(conn2) === Blockly.Connection.CAN_CONNECT) {
-              conn1.connect(conn2);
-              announceToScreenReader(`Connected to nearby ${nearbyBlock.type.replace(/_/g, ' ')} block`);
-              return;
+      const selectedConnections = getAllConnections(selectedBlock);
+
+      // Try to connect to the closest compatible block
+      for (const nearbyBlock of nearbyBlocks) {
+        const nearbyConnections = getAllConnections(nearbyBlock);
+
+        for (const conn1 of selectedConnections) {
+          for (const conn2 of nearbyConnections) {
+            if (canConnect(conn1, conn2)) {
+              try {
+                conn1.connect(conn2);
+                announceToScreenReader(`Connected to nearby ${nearbyBlock.type.replace(/_/g, ' ')} block`);
+                return;
+              } catch (connectError) {
+                console.warn('Failed to connect to nearby block:', connectError);
+                continue;
+              }
             }
           }
         }
