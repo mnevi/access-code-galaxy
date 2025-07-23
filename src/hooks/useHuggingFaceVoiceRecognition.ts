@@ -95,7 +95,7 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
     'clear code': 'CLEAR_CODE'
   };
 
-  const parseCommand = (text: string): { command: string; blockType: string } | null => {
+  const parseCommand = (text: string): { command: string; blockType: string; value?: string } | null => {
     const lowerText = text.toLowerCase().trim();
     console.log('🎤 Voice transcription received:', text);
     console.log('🔍 Processed text for matching:', lowerText);
@@ -114,6 +114,12 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
         console.log('🚫 Non-speech detected, ignoring:', lowerText);
         return null;
       }
+    }
+    // Special case: set value to X / set block value to X
+    const setValueMatch = lowerText.match(/^set (?:block )?value to (.+)$/);
+    if (setValueMatch && setValueMatch[1]) {
+      console.log('✅ Set value command detected:', setValueMatch[1]);
+      return { command: 'SET_BLOCK_VALUE', blockType: 'SET_BLOCK_VALUE', value: setValueMatch[1].trim() };
     }
     console.log('📋 Available commands:', Object.keys(blockCommands));
     // Check for direct block commands
@@ -163,11 +169,19 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
       console.log('Voice transcription:', transcript);
       const parsedCommand = parseCommand(transcript);
       if (parsedCommand) {
-        onCommand(parsedCommand.blockType, transcript);
-        toast({
-          title: "Voice Command Recognized",
-          description: `Placing ${parsedCommand.command} block`,
-        });
+        if (parsedCommand.command === 'SET_BLOCK_VALUE' && parsedCommand.value) {
+          onCommand('SET_BLOCK_VALUE', parsedCommand.value);
+          toast({
+            title: "Voice Command Recognized",
+            description: `Set block value to: ${parsedCommand.value}`,
+          });
+        } else {
+          onCommand(parsedCommand.blockType, transcript);
+          toast({
+            title: "Voice Command Recognized",
+            description: `Placing ${parsedCommand.command} block`,
+          });
+        }
       } else {
         // Check if it was non-speech
         const isNonSpeech = /\[.*?\]/.test(transcript) || 

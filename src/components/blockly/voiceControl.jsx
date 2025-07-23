@@ -80,6 +80,25 @@ const voiceCommands = {
   'duplicate selected block': () => duplicateSelectedBlock(),
   'connect blocks': () => connectSelectedBlocks(),
   'disconnect block': () => disconnectSelectedBlock(),
+
+  // Set value of selected block (text/number)
+  // Matches: 'set block value to X' or 'set value to X'
+  'set block value to': (transcript) => {
+    const match = transcript.match(/set (?:block )?value to (.+)/);
+    if (match && match[1]) {
+      setSelectedBlockValue(match[1].trim());
+    } else {
+      announceToScreenReader('Please specify a value to set');
+    }
+  },
+  'set value to': (transcript) => {
+    const match = transcript.match(/set value to (.+)/);
+    if (match && match[1]) {
+      setSelectedBlockValue(match[1].trim());
+    } else {
+      announceToScreenReader('Please specify a value to set');
+    }
+  },
 };
 
 function createBlock(blockType) {
@@ -112,7 +131,7 @@ function switchLanguage(language) {
   }
 }
 
-function announceToScreenReader(message) {
+export function announceToScreenReader(message) {
   // Create a live region for screen reader announcements
   let liveRegion = document.getElementById('voice-announcements');
   if (!liveRegion) {
@@ -208,12 +227,17 @@ export function initializeVoiceRecognition(workspaceInstance, blocklyUtils) {
     
     // Find and execute matching command
     const command = Object.keys(voiceCommands).find(cmd => 
-      transcript.includes(cmd) || cmd.includes(transcript)
+      transcript.startsWith(cmd) || transcript.includes(cmd)
     );
     
     if (command) {
       try {
-        voiceCommands[command]();
+        // If the command expects the transcript (for value setting), pass it
+        if (command === 'set block value to' || command === 'set value to') {
+          voiceCommands[command](transcript);
+        } else {
+          voiceCommands[command]();
+        }
         announceToScreenReader(`Executed: ${command}`);
         showVoiceFeedback(`✅ ${command}`);
       } catch (error) {
@@ -260,7 +284,7 @@ export function getAvailableCommands() {
 }
 
 // Block selection and manipulation functions
-function selectBlockByPosition(position) {
+export function selectBlockByPosition(position) {
   if (!workspace) return;
   
   const topBlocks = workspace.getTopBlocks(false);
@@ -282,7 +306,7 @@ function selectBlockByPosition(position) {
   }
 }
 
-function selectAdjacentBlock(direction) {
+export function selectAdjacentBlock(direction) {
   if (!workspace) return;
   
   const topBlocks = workspace.getTopBlocks(false);
@@ -314,7 +338,7 @@ function selectAdjacentBlock(direction) {
   announceToScreenReader(`Selected ${direction} block: ${topBlocks[newIndex].type.replace(/_/g, ' ')}`);
 }
 
-function selectBlockByType() {
+export function selectBlockByType() {
   if (!workspace) return;
   
   const topBlocks = workspace.getTopBlocks(false);
@@ -381,7 +405,7 @@ function clearBlockHighlight() {
   highlightedBlocks = [];
 }
 
-function deselectBlock() {
+export function deselectBlock() {
   if (selectedBlock) {
     clearBlockHighlight();
     selectedBlock = null;
@@ -391,7 +415,7 @@ function deselectBlock() {
   }
 }
 
-function selectAllBlocks() {
+export function selectAllBlocks() {
   if (!workspace) return;
   
   const topBlocks = workspace.getTopBlocks(false);
@@ -406,7 +430,7 @@ function selectAllBlocks() {
   announceToScreenReader(`Selected all ${topBlocks.length} blocks`);
 }
 
-function moveSelectedBlock(deltaX, deltaY) {
+export function moveSelectedBlock(deltaX, deltaY) {
   if (!selectedBlock) {
     announceToScreenReader('No block selected to move');
     return;
@@ -427,7 +451,7 @@ function moveSelectedBlock(deltaX, deltaY) {
   }
 }
 
-function deleteSelectedBlock() {
+export function deleteSelectedBlock() {
   if (!selectedBlock) {
     announceToScreenReader('No block selected to delete');
     return;
@@ -445,7 +469,7 @@ function deleteSelectedBlock() {
   }
 }
 
-function duplicateSelectedBlock() {
+export function duplicateSelectedBlock() {
   if (!selectedBlock) {
     announceToScreenReader('No block selected to duplicate');
     return;
@@ -471,7 +495,7 @@ function duplicateSelectedBlock() {
   }
 }
 
-function connectSelectedBlocks() {
+export function connectSelectedBlocks() {
   if (highlightedBlocks.length < 2) {
     announceToScreenReader('Need at least two blocks to connect');
     return;
@@ -501,7 +525,7 @@ function connectSelectedBlocks() {
   }
 }
 
-function disconnectSelectedBlock() {
+export function disconnectSelectedBlock() {
   if (!selectedBlock) {
     announceToScreenReader('No block selected to disconnect');
     return;
@@ -526,6 +550,27 @@ function disconnectSelectedBlock() {
   } catch (error) {
     announceToScreenReader('Could not disconnect block');
     console.error('Error disconnecting block:', error);
+  }
+}
+
+// Set the value of the selected block (text or number blocks only)
+export function setSelectedBlockValue(value) {
+  if (!selectedBlock) {
+    announceToScreenReader('No block selected to set value');
+    return;
+  }
+  // Text block
+  if (selectedBlock.type === 'text') {
+    selectedBlock.setFieldValue(String(value), 'TEXT');
+    announceToScreenReader(`Set text block to: ${value}`);
+  }
+  // Number block
+  else if (selectedBlock.type === 'math_number') {
+    selectedBlock.setFieldValue(String(value), 'NUM');
+    announceToScreenReader(`Set number block to: ${value}`);
+  }
+  else {
+    announceToScreenReader('Selected block is not a text or number block');
   }
 }
 
