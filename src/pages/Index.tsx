@@ -14,6 +14,7 @@ import { useVisualImpairmentMode } from "@/hooks/useVisualImpairmentMode";
 import NeurodivergentModeIndicator from "@/components/NeurodivergentModeIndicator";
 import NeurodivergentModeSettingsDialog from "@/components/NeurodivergentModeSettingsDialog";
 import { HearingImpairmentSettingsDialog } from "@/components/HearingImpairmentSettingsDialog";
+import { VisualImpairmentSettingsDialog } from "@/components/VisualImpairmentSettingsDialog";
 
 import { 
   Zap, 
@@ -541,6 +542,12 @@ const Index = () => {
       <HearingImpairmentSettingsDialog 
         open={showHearingSettings}
         onOpenChange={setShowHearingSettings}
+      />
+
+      {/* Visual Impairment Settings Dialog */}
+      <VisualImpairmentSettingsDialog 
+        open={showVisualSettings}
+        onOpenChange={setShowVisualSettings}
       />
 
     </div>
