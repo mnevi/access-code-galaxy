@@ -49,7 +49,7 @@ const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) 
         size="sm"
         onClick={voiceRecognition.isListening ? voiceRecognition.stopListening : voiceRecognition.startListening}
         disabled={voiceRecognition.isProcessing || voiceRecognition.isModelLoading}
-        className="min-w-[140px]"
+        className="voice-btn min-w-[140px]"
       >
         {buttonState.icon}
         {buttonState.text}

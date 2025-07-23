@@ -1,3 +1,32 @@
+/* Voice Commands Button Style */
+
+.voice-btn {
+    padding: 10px 20px;
+    background: #111 !important;
+    color: #39ff14;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 2px 12px #39ff1466, 0 0 8px #39ff1444;
+    transition: background 0.2s, box-shadow 0.2s, color 0.2s, text-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 0 0 8px #39ff14, 0 0 16px #39ff14, 0 0 2px #fff;
+}
+
+.voice-btn:hover {
+    background: #222;
+    color: #fff200;
+    box-shadow: 0 4px 24px #fff20099, 0 0 16px #39ff14cc;
+    text-shadow: 0 0 12px #fff200, 0 0 24px #39ff14;
+}
+
+.voice-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px #39ff14cc, 0 0 16px #39ff14;
+}
 
 * {
     margin: 0;
@@ -114,27 +143,33 @@ h1 {
 }
 
 .language-select {
-    padding: 12px 18px;
-    border-radius: 12px;
-    border: 2px solid hsl(var(--border));
-    background: hsl(var(--background));
-    color: hsl(var(--foreground));
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(90deg, #df3994 0%, #7d5bcd 100%);
+    color: #fff;
     font-size: 1rem;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(67, 233, 123, 0.08);
+    transition: background 0.2s, box-shadow 0.2s;
+    appearance: none;
 }
 
 .language-select:hover {
-    border-color: hsl(var(--primary));
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    background: linear-gradient(90deg, #7d5bcd 0%, #df3994 100%);
+    box-shadow: 0 4px 12px rgba(67, 233, 123, 0.12);
 }
 
 .language-select:focus {
     outline: none;
-    border-color: hsl(var(--primary));
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
+    box-shadow: 0 0 0 3px #43e97b44;
+}
+
+.language-select option {
+  color: #333;
+  background: #fff;
+  font-weight: 500;
 }
 
 .content {
