@@ -366,27 +366,14 @@ All colors MUST be HSL for accessibility and theming.
 
   /* Visual notification styles */
   .hearing-visual-notification {
-    font-size: var(--hearing-font-size, 1rem);
-    font-weight: var(--hearing-font-weight, 600);
-    line-height: var(--hearing-line-height, 1.5);
     border-width: var(--hearing-border-width, 2px);
   }
 
-  /* Hearing impairment button and icon scaling */
-  [data-hearing-theme] button {
-    transform: scale(var(--hearing-button-scale, 1));
-    font-size: var(--hearing-font-size, 1rem);
-    font-weight: var(--hearing-font-weight, 500);
+  /* Hearing impairment border enhancement */
+  [data-hearing-theme] button,
+  [data-hearing-theme] input,
+  [data-hearing-theme] .card {
     border-width: var(--hearing-border-width, 1px);
-  }
-
-  [data-hearing-theme] .icon {
-    transform: scale(var(--hearing-icon-scale, 1));
-  }
-
-  [data-hearing-theme] * {
-    margin: calc(var(--hearing-spacing-scale, 1) * 1rem);
-    padding: calc(var(--hearing-spacing-scale, 1) * 0.5rem);
   }
 
   /* Visual notification animations */

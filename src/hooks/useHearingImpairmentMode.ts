@@ -114,7 +114,7 @@ export function useHearingImpairmentMode() {
     // Apply theme
     root.setAttribute('data-hearing-theme', settings.theme);
     
-    // Apply font size
+    // Apply font size directly to root
     const fontSizeMap = {
       small: '0.875rem',
       medium: '1rem',
@@ -122,74 +122,54 @@ export function useHearingImpairmentMode() {
       'extra-large': '1.25rem',
       huge: '1.5rem'
     };
-    root.style.setProperty('--hearing-font-size', fontSizeMap[settings.fontSize]);
+    root.style.fontSize = fontSizeMap[settings.fontSize];
     
-    // Apply font weight
+    // Apply font weight directly to root
     const fontWeightMap = {
       normal: '400',
       medium: '500',
       semibold: '600',
       bold: '700'
     };
-    root.style.setProperty('--hearing-font-weight', fontWeightMap[settings.fontWeight]);
+    root.style.fontWeight = fontWeightMap[settings.fontWeight];
     
-    // Apply line spacing
+    // Apply line spacing directly to root
     const lineSpacingMap = {
       compact: '1.2',
       normal: '1.5',
       relaxed: '1.6',
       loose: '1.8'
     };
-    root.style.setProperty('--hearing-line-height', lineSpacingMap[settings.lineSpacing]);
+    root.style.lineHeight = lineSpacingMap[settings.lineSpacing];
     
-    // Apply button and icon sizes
-    const sizeMap = {
-      small: '0.875',
-      medium: '1',
-      large: '1.25',
-      'extra-large': '1.5'
-    };
-    root.style.setProperty('--hearing-button-scale', sizeMap[settings.buttonSize]);
-    root.style.setProperty('--hearing-icon-scale', sizeMap[settings.iconSize]);
-    
-    // Apply spacing
-    const spacingMap = {
-      compact: '0.75',
-      normal: '1',
-      relaxed: '1.25',
-      spacious: '1.5'
-    };
-    root.style.setProperty('--hearing-spacing-scale', spacingMap[settings.spacing]);
-    
-    // Apply visual enhancements
-    if (settings.strongBorders) {
-      root.style.setProperty('--hearing-border-width', '2px');
-    } else {
-      root.style.setProperty('--hearing-border-width', '1px');
-    }
-    
+    // Apply enhanced focus styles
     if (settings.enhancedFocus) {
       root.classList.add('hearing-enhanced-focus');
     } else {
       root.classList.remove('hearing-enhanced-focus');
     }
     
+    // Apply reduced clutter
     if (settings.reducedClutter) {
       root.classList.add('hearing-reduced-clutter');
     } else {
       root.classList.remove('hearing-reduced-clutter');
     }
     
+    // Apply strong borders via CSS custom property
+    if (settings.strongBorders) {
+      root.style.setProperty('--hearing-border-width', '3px');
+    } else {
+      root.style.setProperty('--hearing-border-width', '1px');
+    }
+    
     return () => {
       root.removeAttribute('data-hearing-theme');
-      root.style.removeProperty('--hearing-font-size');
-      root.style.removeProperty('--hearing-font-weight');
-      root.style.removeProperty('--hearing-line-height');
-      root.style.removeProperty('--hearing-button-scale');
-      root.style.removeProperty('--hearing-icon-scale');
-      root.style.removeProperty('--hearing-spacing-scale');
-      root.style.removeProperty('--hearing-border-width');
+      root.style.fontSize = '';
+      root.style.fontWeight = '';
+      root.style.lineHeight = '';
       root.classList.remove('hearing-enhanced-focus', 'hearing-reduced-clutter');
+      root.style.removeProperty('--hearing-border-width');
     };
   }, [isActive, settings]);
 
