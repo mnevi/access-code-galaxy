@@ -46,6 +46,7 @@ export const useHuggingFaceVoiceRecognition = ({ onCommand, enabled }: VoiceReco
     'duplicate selected block': 'DUPLICATE_SELECTED',
     'connect blocks': 'CONNECT_BLOCKS',
     'disconnect block': 'DISCONNECT_BLOCK',
+    'add to connection group': 'ADD_TO_CONNECTION_GROUP',
     
     // Control blocks
     'repeat': 'controls_repeat',

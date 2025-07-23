@@ -363,7 +363,7 @@ export function selectBlockByType() {
 }
 
 function selectBlock(block) {
-  // Clear previous selection
+  // For single block selection, clear previous highlights
   clearBlockHighlight();
   
   selectedBlock = block;
@@ -496,32 +496,72 @@ export function duplicateSelectedBlock() {
 }
 
 export function connectSelectedBlocks() {
-  if (highlightedBlocks.length < 2) {
-    announceToScreenReader('Need at least two blocks to connect');
+  if (!workspace) return;
+  
+  // If we have multiple highlighted blocks, use those
+  if (highlightedBlocks.length >= 2) {
+    try {
+      const [block1, block2] = highlightedBlocks;
+      
+      // Try to find compatible connections
+      const connections1 = block1.getConnections_(false);
+      const connections2 = block2.getConnections_(false);
+      
+      for (const conn1 of connections1) {
+        for (const conn2 of connections2) {
+          if (conn1.checkType_(conn2) && !conn1.isConnected() && !conn2.isConnected()) {
+            conn1.connect(conn2);
+            announceToScreenReader('Blocks connected successfully');
+            return;
+          }
+        }
+      }
+      
+      announceToScreenReader('Could not find compatible connection points between selected blocks');
+    } catch (error) {
+      announceToScreenReader('Error connecting selected blocks');
+      console.error('Error connecting blocks:', error);
+    }
     return;
   }
   
-  try {
-    const [block1, block2] = highlightedBlocks;
-    
-    // Try to find compatible connections
-    const connections1 = block1.getConnections_(false);
-    const connections2 = block2.getConnections_(false);
-    
-    for (const conn1 of connections1) {
-      for (const conn2 of connections2) {
-        if (conn1.checkType_(conn2) && !conn1.isConnected() && !conn2.isConnected()) {
-          conn1.connect(conn2);
-          announceToScreenReader('Blocks connected');
-          return;
+  // If we only have one selected block, try to connect it to nearby blocks
+  if (selectedBlock) {
+    try {
+      const allBlocks = workspace.getTopBlocks(false);
+      const nearbyBlocks = allBlocks.filter(block => 
+        block !== selectedBlock && 
+        isBlockNearby(selectedBlock, block, 100) // Within 100 pixels
+      );
+      
+      if (nearbyBlocks.length === 0) {
+        announceToScreenReader('No nearby blocks to connect to. Select multiple blocks first.');
+        return;
+      }
+      
+      // Try to connect to the nearest compatible block
+      for (const nearbyBlock of nearbyBlocks) {
+        const connections1 = selectedBlock.getConnections_(false);
+        const connections2 = nearbyBlock.getConnections_(false);
+        
+        for (const conn1 of connections1) {
+          for (const conn2 of connections2) {
+            if (conn1.checkType_(conn2) && !conn1.isConnected() && !conn2.isConnected()) {
+              conn1.connect(conn2);
+              announceToScreenReader(`Connected to nearby ${nearbyBlock.type.replace(/_/g, ' ')} block`);
+              return;
+            }
+          }
         }
       }
+      
+      announceToScreenReader('Could not find compatible connection points with nearby blocks');
+    } catch (error) {
+      announceToScreenReader('Error connecting to nearby blocks');
+      console.error('Error connecting blocks:', error);
     }
-    
-    announceToScreenReader('Could not find compatible connection points');
-  } catch (error) {
-    announceToScreenReader('Could not connect blocks');
-    console.error('Error connecting blocks:', error);
+  } else {
+    announceToScreenReader('No blocks selected. Select blocks first to connect them.');
   }
 }
 
@@ -571,6 +611,36 @@ export function setSelectedBlockValue(value) {
   }
   else {
     announceToScreenReader('Selected block is not a text or number block');
+  }
+}
+
+// Helper function to check if two blocks are nearby
+function isBlockNearby(block1, block2, threshold = 100) {
+  try {
+    const pos1 = block1.getRelativeToSurfaceXY();
+    const pos2 = block2.getRelativeToSurfaceXY();
+    const distance = Math.sqrt(
+      Math.pow(pos2.x - pos1.x, 2) + Math.pow(pos2.y - pos1.y, 2)
+    );
+    return distance <= threshold;
+  } catch (error) {
+    return false;
+  }
+}
+
+// Add a function to select multiple blocks for connection
+export function selectBlockForConnection() {
+  if (!selectedBlock) {
+    announceToScreenReader('No block selected to add to connection group');
+    return;
+  }
+  
+  // Add current selected block to highlighted blocks if not already there
+  if (!highlightedBlocks.includes(selectedBlock)) {
+    highlightBlock(selectedBlock);
+    announceToScreenReader(`Added ${selectedBlock.type.replace(/_/g, ' ')} block to connection group. Total: ${highlightedBlocks.length}`);
+  } else {
+    announceToScreenReader('Block already in connection group');
   }
 }
 

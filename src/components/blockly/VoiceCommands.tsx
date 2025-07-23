@@ -12,7 +12,8 @@ import {
   connectSelectedBlocks,
   disconnectSelectedBlock,
   announceToScreenReader,
-  setSelectedBlockValue
+  setSelectedBlockValue,
+  selectBlockForConnection
 } from './voiceControl';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -38,7 +39,7 @@ const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) 
     // Handle advanced voice control commands
     if (command.startsWith('SELECT_') || command.startsWith('MOVE_') || command.startsWith('NUDGE_') || 
         command.startsWith('DELETE_') || command.startsWith('DUPLICATE_') || command.startsWith('CONNECT_') || 
-        command.startsWith('DISCONNECT_') || command === 'DESELECT' || 
+        command.startsWith('DISCONNECT_') || command === 'DESELECT' || command === 'ADD_TO_CONNECTION_GROUP' ||
         command.startsWith('ZOOM_') || command.startsWith('CENTER_') || command.startsWith('CLEAR_') ||
         command === 'UNDO' || command === 'REDO' || command === 'RUN_CODE') {
       // Execute the command using the voice control system
@@ -108,6 +109,9 @@ const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) 
         break;
       case 'DISCONNECT_BLOCK':
         disconnectSelectedBlock();
+        break;
+      case 'ADD_TO_CONNECTION_GROUP':
+        selectBlockForConnection();
         break;
       case 'ZOOM_IN':
         // These workspace actions are UI only, not block actions
@@ -235,6 +239,7 @@ const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) 
                     <Badge variant="secondary" className="text-xs">duplicate selected block</Badge>
                     <Badge variant="secondary" className="text-xs">connect blocks</Badge>
                     <Badge variant="secondary" className="text-xs">disconnect block</Badge>
+                    <Badge variant="secondary" className="text-xs">add to connection group</Badge>
                   </div>
                 </div>
 
@@ -296,7 +301,7 @@ const VoiceCommands: React.FC<VoiceCommandsProps> = ({ onPlaceBlock, enabled }) 
                 Chain commands for complex operations:
               </p>
               <div className="text-xs text-amber-600 dark:text-amber-400 space-y-1">
-                <div>• "select first block, move right, move down, duplicate selected block"</div>
+                <div>• "select first block, add to connection group, select next block, add to connection group, connect blocks"</div>
                 <div>• "select all blocks, move up, connect blocks"</div>
                 <div>• Movement: "move" (50px) vs "nudge" (10px) for precision</div>
                 <div>• Selected blocks pulse with red glow and provide audio feedback</div>
