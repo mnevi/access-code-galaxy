@@ -229,6 +229,97 @@ All colors MUST be HSL for accessibility and theming.
     --input: 0 0% 100%;
     --ring: 220 100% 40%;
   }
+
+  /* Visual Impairment Mode Theme Definitions */
+  [data-visual-theme="light"] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 0%;
+    --primary: 220 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 20%;
+    --accent: 220 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 80%;
+    --input: 0 0% 100%;
+    --ring: 220 100% 40%;
+  }
+
+  [data-visual-theme="dark"] {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 100%;
+    --primary: 220 100% 60%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 80%;
+    --accent: 220 100% 70%;
+    --accent-foreground: 0 0% 0%;
+    --border: 0 0% 20%;
+    --input: 0 0% 8%;
+    --ring: 220 100% 60%;
+  }
+
+  [data-contrast="high"] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 85%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 0%;
+    --accent: 0 0% 0%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 0%;
+  }
+
+  [data-contrast="extra-high"] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 100%;
+    --muted-foreground: 0 0% 0%;
+    --accent: 0 0% 0%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 0%;
+  }
+
+  [data-contrast="inverted"] {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 100%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 0 0% 0%;
+    --border: 0 0% 100%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 100%;
+  }
 }
 
 @layer base {
@@ -262,6 +353,48 @@ All colors MUST be HSL for accessibility and theming.
   .neurodivergent-mode *:focus {
     outline: 2px solid hsl(var(--primary));
     outline-offset: 2px;
+  }
+
+  /* Visual Impairment Mode Styles */
+  .visual-impairment-mode *:focus {
+    outline: var(--visual-focus-width, 2px) solid hsl(var(--primary)) !important;
+    outline-offset: 4px !important;
+    box-shadow: 0 0 0 calc(var(--visual-focus-width, 2px) * 2) hsl(var(--primary) / 0.2) !important;
+  }
+
+  .visual-impairment-mode.visual-highlight-links a {
+    background-color: hsl(var(--primary) / 0.1);
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  .visual-impairment-mode.visual-underline-links a {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 4px !important;
+  }
+
+  .visual-impairment-mode.visual-reduce-motion * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .visual-impairment-mode.visual-increased-spacing * {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .visual-impairment-mode.visual-simplified-layout .secondary-content,
+  .visual-impairment-mode.visual-simplified-layout .decorative-element {
+    display: none !important;
+  }
+
+  .visual-impairment-mode.visual-remove-backgrounds * {
+    background: hsl(var(--background)) !important;
+    background-image: none !important;
+  }
+
+  .visual-impairment-mode.visual-monochrome {
+    filter: grayscale(100%);
   }
 
   /* Reduced motion preferences */

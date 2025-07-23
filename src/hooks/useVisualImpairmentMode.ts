@@ -118,7 +118,7 @@ export function useVisualImpairmentMode() {
 
     const root = document.documentElement;
     
-    // Apply color scheme and contrast directly to data attributes
+    // Apply color scheme and contrast directly to data attributes (for theme switching)
     root.setAttribute('data-visual-theme', settings.colorScheme);
     root.setAttribute('data-contrast', settings.contrastMode);
     
@@ -168,13 +168,7 @@ export function useVisualImpairmentMode() {
       root.style.fontFamily = '';
     }
     
-    // Apply CSS classes for visual enhancements
-    if (settings.enhancedFocus) {
-      root.classList.add('visual-enhanced-focus');
-    } else {
-      root.classList.remove('visual-enhanced-focus');
-    }
-    
+    // Apply CSS classes to the root element with visual-impairment-mode class
     if (settings.highlightLinks) {
       root.classList.add('visual-highlight-links');
     } else {
@@ -217,7 +211,7 @@ export function useVisualImpairmentMode() {
       root.classList.remove('visual-monochrome');
     }
     
-    // Apply only essential CSS custom properties for focus and cursor
+    // Apply custom properties for focus styling
     const focusSizeMap = {
       normal: '2px',
       large: '4px',
@@ -234,7 +228,6 @@ export function useVisualImpairmentMode() {
       root.style.letterSpacing = '';
       root.style.fontFamily = '';
       root.classList.remove(
-        'visual-enhanced-focus',
         'visual-highlight-links',
         'visual-underline-links',
         'visual-reduce-motion',
