@@ -9,7 +9,7 @@ import Profile from "./pages/Profile"
 import NotFound from "./pages/NotFound";
 import Challenge from "./pages/Challenge";
 import ChallengeSelection from "./pages/ChallengeSelection";
-import BlocklyWorkspace from './components/blockly/BlocklyWorkspace.jsx';
+import ChallengeWithBlockly from './pages/ChallengeWithBlockly';
 
 const queryClient = new QueryClient();
 
@@ -25,7 +25,7 @@ const App = () => (
         <Route path="/profile" element={<Profile />} />
         <Route path="/challenge" element={<Challenge />} />
         <Route path="/challenge-selection" element={<ChallengeSelection />} />
-        <Route path="/blockly/:challengeId" element={<BlocklyWorkspace />} />
+        <Route path="/blockly/:challengeId" element={<ChallengeWithBlockly />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -199,10 +199,20 @@ export class ChallengeService {
 
 static evaluateWorkspace(workspace: any, challengeId: string, output?: string): { progress: number, completed: boolean } {
     const challenge = challenges.find(c => c.id === challengeId);
-    if (!challenge) return { progress: 0, completed: false };
+    if (!challenge) {
+      console.error(`[Blockly Debug] Challenge not found for id: ${challengeId}`);
+      return { progress: 0, completed: false };
+    }
 
     const blocks = workspace.getAllBlocks(false);
     const blockTypes = blocks.map((block: any) => block.type);
+
+    console.log(`[Blockly Debug] Evaluating challenge:`, {
+      challengeId,
+      challenge,
+      blockTypes,
+      output
+    });
 
     const { successCriteria } = challenge;
 
@@ -220,19 +230,38 @@ static evaluateWorkspace(workspace: any, challengeId: string, output?: string): 
         const hasRequiredTypes = foundBlocks >= requiredBlocks.length;
         const progress = Math.min(100, (foundBlocks / requiredBlocks.length) * 100);
         const completed = hasMinimumBlocks && hasRequiredTypes;
+        console.log(`[Blockly Debug] blockCount`, {
+          requiredBlocks,
+          minBlocks,
+          foundBlocks,
+          hasMinimumBlocks,
+          hasRequiredTypes,
+          progress,
+          completed
+        });
         return { progress, completed };
       }
 
       case "execution": {
-        if (!output) return { progress: 0, completed: false };
-        const expected = (successCriteria.value.value || "").replace(/\r\n/g, "\n").trim();
+        if (!output) {
+          console.warn(`[Blockly Debug] No output provided for execution challenge.`);
+          return { progress: 0, completed: false };
+        }
+        const expected = (successCriteria.value || "").replace(/\r\n/g, "\n").trim();
         const actual = output.replace(/\r\n/g, "\n").trim();
         const completed = actual === expected;
         const progress = completed ? 100 : 0;
+        console.log(`[Blockly Debug] execution`, {
+          expected,
+          actual,
+          completed,
+          progress
+        });
         return { progress, completed };
       }
 
       default:
+        console.warn(`[Blockly Debug] Unknown successCriteria type: ${successCriteria.type}`);
         return { progress: 0, completed: false };
     }
   }

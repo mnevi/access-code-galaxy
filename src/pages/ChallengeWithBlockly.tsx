@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import BlocklyWorkspace from "../components/blockly/BlocklyWorkspace.jsx";
 import { ChallengeService } from "../services/challengeService";
 import { useNeurodivergentMode } from "@/hooks/useNeurodivergentMode";
@@ -10,79 +9,54 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  BookOpen, 
-  Clock, 
-  Zap, 
-  Heart, 
-  RotateCcw, 
-  Settings2,
-  Play,
-  Pause
-} from "lucide-react";
+import { BookOpen, Clock, Zap, Heart, RotateCcw, Pause } from "lucide-react";
 
-const Challenge: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const challengeId = searchParams.get('id') || 'html-basics';
+const ChallengeWithBlockly: React.FC = () => {
+  const { challengeId = "html-basics" } = useParams();
   const [challenge, setChallenge] = useState(null);
   const [progress, setProgress] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [attempts, setAttempts] = useState(0);
-  
-  const { 
-    isActive, 
-    settings, 
-    playAudioCue, 
+
+  const {
+    isActive,
+    settings,
+    playAudioCue,
     speak,
     sessionTimer,
-    isOnBreak 
+    isOnBreak
   } = useNeurodivergentMode();
 
   useEffect(() => {
     const challengeData = ChallengeService.getChallengeById(challengeId);
     setChallenge(challengeData);
-    
     if (isActive && challengeData) {
-      // Announce challenge when loaded
       const description = `Challenge loaded: ${challengeData.title}. ${challengeData.description}`;
-      if (settings.textToSpeechEnabled) {
-        speak(description);
-      }
-      if (settings.audioCuesEnabled) {
-        playAudioCue('notification');
-      }
+      if (settings.textToSpeechEnabled) speak(description);
+      if (settings.audioCuesEnabled) playAudioCue("notification");
     }
   }, [challengeId, isActive, settings.textToSpeechEnabled, settings.audioCuesEnabled]);
 
   const handleProgressUpdate = (newProgress: number) => {
     setProgress(newProgress);
-    
     if (isActive && settings.celebrateProgress) {
       if (newProgress === 100) {
-        playAudioCue('success');
-        if (settings.textToSpeechEnabled) {
-          speak('Congratulations! Challenge completed successfully!');
-        }
+        playAudioCue("success");
+        if (settings.textToSpeechEnabled) speak("Congratulations! Challenge completed successfully!");
       } else if (newProgress > progress && newProgress % 25 === 0) {
-        playAudioCue('notification');
-        if (settings.textToSpeechEnabled) {
-          speak(`Great progress! You're ${newProgress}% complete.`);
-        }
+        playAudioCue("notification");
+        if (settings.textToSpeechEnabled) speak(`Great progress! You're ${newProgress}% complete.`);
       }
     }
   };
 
   const handleError = (error: string) => {
     setAttempts(prev => prev + 1);
-    
     if (isActive) {
-      playAudioCue('error');
-      
+      playAudioCue("error");
       if (settings.gentleErrorMessages) {
         const gentleMessage = `Don't worry, that's part of learning! ${error}. You can try again.`;
-        if (settings.textToSpeechEnabled) {
-          speak(gentleMessage);
-        }
+        if (settings.textToSpeechEnabled) speak(gentleMessage);
       }
     }
   };
@@ -90,12 +64,9 @@ const Challenge: React.FC = () => {
   const handleRetry = () => {
     setProgress(0);
     setAttempts(0);
-    
     if (isActive) {
-      playAudioCue('notification');
-      if (settings.textToSpeechEnabled) {
-        speak('Starting fresh! Take your time.');
-      }
+      playAudioCue("notification");
+      if (settings.textToSpeechEnabled) speak("Starting fresh! Take your time.");
     }
   };
 
@@ -111,7 +82,7 @@ const Challenge: React.FC = () => {
   }
 
   return (
-    <div className={`flex flex-col min-h-screen ${isActive ? 'neurodivergent-mode' : ''} ${showSettings ? 'overflow-hidden' : ''}`}>
+    <div className={`flex flex-col min-h-screen ${isActive ? "neurodivergent-mode" : ""} ${showSettings ? "overflow-hidden" : ""}`}>
       {/* Break Mode Overlay */}
       {isActive && isOnBreak && (
         <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-40 flex items-center justify-center">
@@ -133,13 +104,11 @@ const Challenge: React.FC = () => {
           </Card>
         </div>
       )}
-
-      {/* Background Blur Overlay for Settings - Even higher z-index to cover all blockly elements */}
+      {/* Background Blur Overlay for Settings */}
       {showSettings && (
-        <div className="fixed inset-0 bg-background/70 backdrop-blur-xl z-[9999]" style={{ backdropFilter: 'blur(25px) saturate(200%)' }} />
+        <div className="fixed inset-0 bg-background/70 backdrop-blur-xl z-[9999]" style={{ backdropFilter: "blur(25px) saturate(200%)" }} />
       )}
-
-      {/* Challenge Header - Title & Description always at the top */}
+      {/* Challenge Header */}
       <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
@@ -149,7 +118,6 @@ const Challenge: React.FC = () => {
               <p className="text-lg text-muted-foreground">{challenge.description}</p>
             </div>
           </div>
-          {/* Action Buttons and Stats */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex flex-wrap gap-4">
               <Badge variant="secondary" className="flex items-center gap-1">
@@ -171,8 +139,8 @@ const Challenge: React.FC = () => {
               )}
             </div>
             {isActive && settings.allowLessonRepeat && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleRetry}
                 className="flex items-center gap-2"
               >
@@ -181,7 +149,6 @@ const Challenge: React.FC = () => {
               </Button>
             )}
           </div>
-          {/* Progress Bar */}
           {isActive && settings.showProgressIndicators && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -193,11 +160,10 @@ const Challenge: React.FC = () => {
           )}
         </div>
       </div>
-
       {/* Main Content */}
       <div className="flex-1 p-6">
         <div className="max-w-6xl mx-auto">
-          <BlocklyWorkspace 
+          <BlocklyWorkspace
             challengeId={challengeId}
             onProgressUpdate={handleProgressUpdate}
             onError={handleError}
@@ -205,21 +171,14 @@ const Challenge: React.FC = () => {
           />
         </div>
       </div>
-
       {/* Neurodivergent Mode Indicator */}
       {isActive && (
-        <NeurodivergentModeIndicator 
-          onOpenSettings={() => setShowSettings(true)}
-        />
+        <NeurodivergentModeIndicator onOpenSettings={() => setShowSettings(true)} />
       )}
-
       {/* Neurodivergent Mode Settings Dialog */}
-      <NeurodivergentModeSettingsDialog 
-        open={showSettings}
-        onOpenChange={setShowSettings}
-      />
+      <NeurodivergentModeSettingsDialog open={showSettings} onOpenChange={setShowSettings} />
     </div>
   );
 };
 
-export default Challenge;
+export default ChallengeWithBlockly;

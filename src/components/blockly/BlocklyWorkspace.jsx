@@ -178,6 +178,9 @@ const BlocklyWorkspace = () => {
       const data = await response.json();
       setOutput(data.output);
 
+      // evaluate challenge after output is set
+      evaluateWorkspace(workspaceRef.current, data.output);
+
       // if freeplay mode, skip challenge validation
       if (challengeId === 'freeplay' || !challenge || challenge.goalOutput === null) {
         return;
@@ -342,7 +345,7 @@ const BlocklyWorkspace = () => {
         // Debounce evaluation to avoid too many calls
         clearTimeout(window.evaluationTimeout);
         window.evaluationTimeout = setTimeout(() => {
-          evaluateWorkspace(workspaceRef.current);
+          evaluateWorkspace(workspaceRef.current, output);
         }, 1000);
       });
 

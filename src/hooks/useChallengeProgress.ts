@@ -9,7 +9,7 @@ export function useChallengeProgress(challengeId?: string) {
   const [isCompleted, setIsCompleted] = useState(false);
   const { toast } = useToast();
 
-  const evaluateWorkspace = async (workspace: any) => {
+  const evaluateWorkspace = async (workspace: any, output?: string) => {
     if (!challengeId || !workspace) return;
 
     setIsEvaluating(true);
@@ -18,7 +18,7 @@ export function useChallengeProgress(challengeId?: string) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const evaluation = ChallengeService.evaluateWorkspace(workspace, challengeId);
+      const evaluation = ChallengeService.evaluateWorkspace(workspace, challengeId, output);
       setCurrentProgress(evaluation.progress);
 
       // Only update if progress has changed significantly or challenge is completed
