@@ -17,35 +17,15 @@ import { useAudioDescriptions } from '../../hooks/useAudioDescriptions';
 import { useParams } from 'react-router-dom';
 
 // challenge parameters
-const challenges = {
-  freeplay: {
-    title: "Do whatever you want",
-    goalOutput: '',
-    maxBlocks: 999,
-  },
-  printHelloFive: {
-    title: "Print 'hello' five times",
-    goalOutput: 'hello\nhello\nhello\nhello\nhello\n',
-    maxBlocks: 3,
-  },
-  print123: {
-    title: "Print 1 - 5 using only 3 blocks",
-    goalOutput: '1\n2\n3\n4\n5\n',
-    maxBlocks: 3,
-  },
-  prime100: {
-    title: "Print the prime numbers from 2 - 100",
-    goalOutput: '\n' +
-        '2\\n3\\n5\\n7\\n11\\n13\\n17\\n19\\n23\\n29\\n31\\n37\\n41\\n43\\n47\\n53\\n59\\n61\\n67\\n71\\n73\\n79\\n83\\n89\\n97\\n',
-    maxBlocks: 20,
-  },
-};
+import { challenges } from "../../services/challengeService";
 
 const BlocklyWorkspace = () => {
 
   // load challenge data
   const { challengeId } = useParams();
-  const challenge = challenges[challengeId];
+  const challenge = Array.isArray(challenges)
+    ? challenges.find(c => c.id === challengeId)
+    : challenges[challengeId];
 
   const blocklyDiv = useRef(null);
   const { currentProgress, isCompleted, isEvaluating, evaluateWorkspace } = useChallengeProgress(challengeId);
@@ -253,8 +233,27 @@ const BlocklyWorkspace = () => {
     hapticFeedback.onUIInteraction('switch');
   };
 
-  if(!challenge) {
-    return <div style={{ padding: '2rem', color: 'red' }}> Challenge not found: <b>{challengeId}</b></div>;
+  // detailed debugging if challenge not found
+  if (!challenge) {
+    const availableIds = Array.isArray(challenges)
+      ? challenges.map(c => c.id)
+      : Object.keys(challenges);
+    console.error('[BlocklyWorkspace] Challenge not found:', {
+      challengeId,
+      availableIds,
+      challenges,
+      location: window.location.pathname,
+    });
+    return (
+      <div style={{ padding: '2rem', color: 'red' }}>
+        <div>Challenge not found: <b>{challengeId}</b></div>
+        <div style={{ marginTop: '1rem', fontSize: '0.95rem', color: '#555' }}>
+          <div><b>Available challenge IDs:</b> {availableIds.join(', ')}</div>
+          <div><b>Current URL:</b> {window.location.pathname}</div>
+          <div><b>Debug:</b> See browser console for details.</div>
+        </div>
+      </div>
+    );
   }
   
   useKeyboardNavigation({

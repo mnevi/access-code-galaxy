@@ -1,3 +1,5 @@
+// Written by Max Neville
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +17,7 @@ import NeurodivergentModeIndicator from "@/components/NeurodivergentModeIndicato
 import NeurodivergentModeSettingsDialog from "@/components/NeurodivergentModeSettingsDialog";
 import { HearingImpairmentSettingsDialog } from "@/components/HearingImpairmentSettingsDialog";
 import { VisualImpairmentSettingsDialog } from "@/components/VisualImpairmentSettingsDialog";
+import { useNavigate } from 'react-router-dom';
 
 import { 
   Zap, 
@@ -46,6 +49,8 @@ const Index = () => {
   const { isActive } = useNeurodivergentMode();
   const { isActive: isHearingActive } = useHearingImpairmentMode();
   const { isActive: isVisualActive } = useVisualImpairmentMode();
+
+  const navigate = useNavigate(); // for navigation purposes
 
   const uiAccessibilityModes = [
     {
@@ -357,7 +362,7 @@ const Index = () => {
               <Button
                 size="lg"
                 className="btn-success"
-                onClick={() => window.location.href = '/challenge'}
+                onClick={() => window.location.href = `/blockly/${challenges[0]?.id || '0'}`}
               >
                 Continue with {uiAccessibilityModes.find(m => m.id === selectedMode)?.title}
                 <ChevronRight className="ml-2 h-5 w-5" />
@@ -388,7 +393,7 @@ const Index = () => {
               <ChallengeCard 
                 key={challenge.id || index} 
                 {...challenge} 
-                onClick={() => window.location.href = `/challenge?id=${challenge.id || 'html-basics'}`}
+                onClick={() => navigate(`/blockly/${challenge.id}`)}
               />
             ))}
           </div>
