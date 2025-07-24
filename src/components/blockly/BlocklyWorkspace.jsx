@@ -14,9 +14,39 @@ import { useScreenReader } from '../../hooks/useScreenReader';
 import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation';
 import { useHapticFeedback, useAccessibilityHaptics } from '../../hooks/useHapticFeedback';
 import { useAudioDescriptions } from '../../hooks/useAudioDescriptions';
+import { useParams } from 'react-router-dom';
 
+// challenge parameters
+const challenges = {
+  freeplay: {
+    title: "Do whatever you want",
+    goalOutput: '',
+    maxBlocks: 999,
+  },
+  printHelloFive: {
+    title: "Print 'hello' five times",
+    goalOutput: 'hello\nhello\nhello\nhello\nhello\n',
+    maxBlocks: 3,
+  },
+  print123: {
+    title: "Print 1 - 5 using only 3 blocks",
+    goalOutput: '1\n2\n3\n4\n5\n',
+    maxBlocks: 3,
+  },
+  prime100: {
+    title: "Print the prime numbers from 2 - 100",
+    goalOutput: '\n' +
+        '2\\n3\\n5\\n7\\n11\\n13\\n17\\n19\\n23\\n29\\n31\\n37\\n41\\n43\\n47\\n53\\n59\\n61\\n67\\n71\\n73\\n79\\n83\\n89\\n97\\n',
+    maxBlocks: 20,
+  },
+};
 
-const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
+const BlocklyWorkspace = () => {
+
+  // load challenge data
+  const { challengeId } = useParams();
+  const challenge = challenges[challengeId];
+
   const blocklyDiv = useRef(null);
   const { currentProgress, isCompleted, isEvaluating, evaluateWorkspace } = useChallengeProgress(challengeId);
   const { currentMode, features } = useAccessibility();
@@ -78,7 +108,8 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
-  const [challenge, setChallenge] = useState(null);
+  // const [challenge, setChallenge] = useState(null);
+  // ^ not used anymore with dynamic challenges
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const languageRef = useRef(language);
   
@@ -130,17 +161,25 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
 
   const handleRun = async () => {
     hapticFeedback.onUIInteraction('button');
-    
+
     if (
-        code.includes('No blocks in workspace') ||
-        code.includes('Workspace cleared') ||
-        code.trim() === ''
+      code.includes('No blocks in workspace') ||
+      code.includes('Workspace cleared') ||
+      code.trim() === ''
     ) {
       const errorMsg = 'Please create some blocks before running';
       alert(errorMsg);
       screenReader.announceError('No blocks to run');
       audioDescriptions.describeError('No blocks to run');
       hapticFeedback.onWorkspaceAction('error');
+      return;
+    }
+
+    // Get current blocks in workspace for block count validation
+    const blocks = workspaceRef.current ? workspaceRef.current.getAllBlocks(false) : [];
+    if (challenge && challengeId !== 'freeplay' && blocks.length > challenge.maxBlocks) {
+      const errorMsg = `You used too many blocks! Limit: ${challenge.maxBlocks}, Used: ${blocks.length}`;
+      alert(errorMsg);
       return;
     }
 
@@ -158,8 +197,25 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
 
       const data = await response.json();
       setOutput(data.output);
-      screenReader.announceSuccess('Code executed successfully');
-      audioDescriptions.describeSuccess('Code executed successfully');
+
+      // if freeplay mode, skip challenge validation
+      if (challengeId === 'freeplay' || !challenge || challenge.goalOutput === null) {
+        return;
+      }
+
+      // challenge mode: check correctness seperately
+      const normalize = (s) => s.replace(/\r\n/g, '\n').trim();
+      const actual = normalize(data.output);
+      const expected = normalize(challenge.goalOutput);
+
+      if (actual === expected) {
+        screenReader.announceSuccess('Code executed successfully');
+        audioDescriptions.describeSuccess('Code executed successfully');
+      }
+      else {
+        screenReader.announceSuccess(`Output did not match. \n\nExpected:\n${expected}\n\nGot:\n${actual}`);
+        audioDescriptions.describeSuccess(`Output did not match. \n\nExpected:\n${expected}\n\nGot:\n${actual}`);
+      }
     } catch (err) {
       const errorMsg = `Error: ${err.message}`;
       setOutput(errorMsg);
@@ -196,6 +252,10 @@ const BlocklyWorkspace = ({ challengeId = 'html-basics' }) => {
     audioDescriptions.describeLanguageChange(languageNames[newLanguage]);
     hapticFeedback.onUIInteraction('switch');
   };
+
+  if(!challenge) {
+    return <div style={{ padding: '2rem', color: 'red' }}> Challenge not found: <b>{challengeId}</b></div>;
+  }
   
   useKeyboardNavigation({
     enabled: features.keyboardNavigation || false,
@@ -402,13 +462,6 @@ const generators = {
     hapticFeedback.onUIInteraction('switch');
   };
   
-  // Load challenge data
-  useEffect(() => {
-    if (challengeId) {
-      const challengeData = ChallengeService.getChallengeById(challengeId);
-      setChallenge(challengeData);
-    }
-  }, [challengeId]);
   
   // Provide audio description of challenge when component loads
   useEffect(() => {
