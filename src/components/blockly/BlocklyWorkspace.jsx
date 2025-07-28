@@ -248,9 +248,9 @@ const BlocklyWorkspace = () => {
       location: window.location.pathname,
     });
     return (
-      <div style={{ padding: '2rem', color: 'red' }}>
+      <div className="challenge-not-found">
         <div>Challenge not found: <b>{challengeId}</b></div>
-        <div style={{ marginTop: '1rem', fontSize: '0.95rem', color: '#555' }}>
+        <div className="challenge-not-found-details">
           <div><b>Available challenge IDs:</b> {availableIds.join(', ')}</div>
           <div><b>Current URL:</b> {window.location.pathname}</div>
           <div><b>Debug:</b> See browser console for details.</div>
@@ -563,7 +563,7 @@ const generators = {
               value={code} 
               id="codeOutput" 
               rows="10"
-              style={{ fontSize: features.largeText ? '18px' : '14px' }}
+              className={features.largeText ? 'large-text' : ''}
               aria-live={features.screenReader ? 'polite' : 'off'}
             ></textarea>
 
@@ -575,7 +575,7 @@ const generators = {
               value={output} 
               id="programOutput" 
               rows="6"
-              style={{ fontSize: features.largeText ? '18px' : '14px' }}
+              className={features.largeText ? 'large-text' : ''}
               aria-live={features.screenReader ? 'assertive' : 'off'}
             ></textarea>
           </div>

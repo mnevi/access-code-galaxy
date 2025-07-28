@@ -1,9 +1,29 @@
+/* Hide Blockly's custom vertical scrollbar handle */
+.blocklyScrollbarHandle {
+  display: none !important;
+}
+/* Error message for challenge not found */
+.challenge-not-found {
+  padding: 2rem;
+  color: red;
+}
+
+.challenge-not-found-details {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* Large text for output/code areas */
+.large-text {
+  font-size: 18px !important;
+}
 /* Voice Commands Button Style */
 
 .voice-btn {
     padding: 10px 20px;
     background: #111 !important;
-    color: #39ff14;
+    color: #26ff00;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -218,7 +238,7 @@ h1 {
     min-height: 400px;
     border-radius: 0 0 18px 18px;
     background: #f5f8ff;
-    overflow: auto;
+    /* Removed overflow: auto to prevent double scrollbars */
     position: relative;
     box-shadow: 0 2px 8px rgba(60, 100, 180, 0.04);
 }

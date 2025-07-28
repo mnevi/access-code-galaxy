@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import './AccessibilityControls.css';
 import { Button } from '@/components/ui/button';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { 
@@ -40,12 +42,12 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
 
   if (!currentMode) return null;
 
-  return (
+  // portal ensures that accessibility controls persist at the top of the page
+  return createPortal(
     <div className="accessibility-controls">
       <div className="accessibility-mode-indicator">
         <span className="mode-badge">{currentMode.title} Mode</span>
       </div>
-      
       <div className="accessibility-buttons">
         {/* Voice Commands for Motor Impairment */}
         {features.voiceCommands && (
@@ -126,7 +128,8 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
           </Button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

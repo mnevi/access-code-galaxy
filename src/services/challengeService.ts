@@ -7,11 +7,15 @@ export interface Challenge {
   difficulty: "Beginner" | "Intermediate" | "Advanced";
   estimatedTime: string;
   xpReward: number;
-  requiredBlocks: string[];
+  maxBlocks: number;
   successCriteria: {
     type: "blockCount" | "codeGeneration" | "execution";
     value: any;
   };
+  // Optionals for UI/merged progress
+  isCompleted?: boolean;
+  progress?: number;
+  isLocked?: boolean;
 }
 
 export interface ChallengeProgress {
@@ -84,7 +88,7 @@ export const challenges: Challenge[] = [
     difficulty: "Beginner",
     estimatedTime: "45 min",
     xpReward: 100,
-    requiredBlocks: ["text_print"],
+    maxBlocks: 3,
     successCriteria: {
       type: "execution",
       value: 'hello\nhello\nhello\nhello\nhello\n'
@@ -97,7 +101,7 @@ export const challenges: Challenge[] = [
     difficulty: "Intermediate",
     estimatedTime: "60 min",
     xpReward: 150,
-    requiredBlocks: ["controls_repeat", "text_print"],
+    maxBlocks: 3,
     successCriteria: {
       type: "execution",
       value: '1\n2\n3\n4\n5\n'
@@ -110,7 +114,7 @@ export const challenges: Challenge[] = [
     difficulty: "Advanced",
     estimatedTime: "90 min",
     xpReward: 200,
-    requiredBlocks: ["controls_if", "controls_for", "variables_get"],
+    maxBlocks: 20,
     successCriteria: {
       type: "execution",
       value: '\n' +
@@ -218,26 +222,16 @@ static evaluateWorkspace(workspace: any, challengeId: string, output?: string): 
 
     switch (successCriteria.type) {
       case "blockCount": {
-        const requiredBlocks = successCriteria.value.blocks;
-        const minBlocks = successCriteria.value.min;
-        let foundBlocks = 0;
-        requiredBlocks.forEach((requiredType: string) => {
-          if (blockTypes.includes(requiredType)) {
-            foundBlocks++;
-          }
-        });
-        const hasMinimumBlocks = blocks.length >= minBlocks;
-        const hasRequiredTypes = foundBlocks >= requiredBlocks.length;
-        const progress = Math.min(100, (foundBlocks / requiredBlocks.length) * 100);
-        const completed = hasMinimumBlocks && hasRequiredTypes;
+        // Fulfill the maxBlocks parameter: completed if blocks.length <= maxBlocks and > 0
+        const maxBlocks = challenge.maxBlocks;
+        const blockCount = blocks.length;
+        const completed = blockCount > 0 && blockCount <= maxBlocks;
+        const progress = blockCount > maxBlocks ? 0 : Math.min(100, (blockCount / maxBlocks) * 100);
         console.log(`[Blockly Debug] blockCount`, {
-          requiredBlocks,
-          minBlocks,
-          foundBlocks,
-          hasMinimumBlocks,
-          hasRequiredTypes,
-          progress,
-          completed
+          maxBlocks,
+          blockCount,
+          completed,
+          progress
         });
         return { progress, completed };
       }
