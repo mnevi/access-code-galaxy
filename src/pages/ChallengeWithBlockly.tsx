@@ -116,6 +116,11 @@ const ChallengeWithBlockly: React.FC = () => {
             <div>
               <h1 className="text-3xl font-extrabold mb-1">{challenge.title}</h1>
               <p className="text-lg text-muted-foreground">{challenge.description}</p>
+              {challenge.maxBlocks && (
+                <span className="text-sm text-blue-700 font-semibold block mt-1">
+                  Max Blocks Allowed: {challenge.maxBlocks}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center justify-between mb-4">

@@ -1,11 +1,46 @@
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import subprocess
 import tempfile
 import os
+from supabase import create_client, Client
+
 
 app = Flask(__name__)
 CORS(app)
+
+# Supabase config
+SUPABASE_URL = 'https://fnizqjpesasfkykewofe.supabase.co'
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Endpoint to update challenge progress in Supabase
+@app.route('/api/progress', methods=['POST'])
+def post_progress():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    challenge_id = data.get('challenge_id')
+    completed = data.get('completed')
+    progress = data.get('progress')
+    # Update or insert progress row for this user/challenge
+    try:
+        # Try to update existing row
+        update_resp = supabase.table('challenge_progress').update({
+            'completed': completed,
+            'progress': progress
+        }).eq('user_id', user_id).eq('challenge_id', challenge_id).execute()
+        # If no row was updated, insert new
+        if update_resp.data is not None and len(update_resp.data) == 0:
+            supabase.table('challenge_progress').insert({
+                'user_id': user_id,
+                'challenge_id': challenge_id,
+                'completed': completed,
+                'progress': progress
+            }).execute()
+        return jsonify({'status': 'progress updated'})
+    except Exception as e:
+        print(f"Supabase error: {e}")
+        return jsonify({'status': 'error', 'error': str(e)}), 500
 
 @app.route('/api/health')
 def health():

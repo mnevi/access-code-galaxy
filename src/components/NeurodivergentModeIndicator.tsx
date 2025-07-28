@@ -1,3 +1,4 @@
+// neurodivergent mode panel
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -55,7 +56,7 @@ const NeurodivergentModeIndicator: React.FC<NeurodivergentModeIndicatorProps> = 
   };
 
   return (
-    <Card className="fixed bottom-4 right-4 z-50 w-80 shadow-lg border-primary/20">
+    <Card className="fixed bottom-4 left-4 z-[9999] w-80 shadow-lg border-primary/20">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">

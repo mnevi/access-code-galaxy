@@ -1,0 +1,67 @@
+# Challenge List for Access Code Galaxy
+
+This file documents all coding challenges available in the project, including their IDs, titles, descriptions, difficulty, estimated time, XP reward, max blocks, and success criteria.
+
+---
+
+## Challenges
+
+### 1. Intro to Printing
+- **ID:** print
+- **Title:** Intro to Printing
+- **Description:** Print 'hello' five times
+- **Difficulty:** Beginner
+- **Estimated Time:** 45 min
+- **XP Reward:** 100
+- **Max Blocks:** 3
+- **Success Criteria:**
+  - Type: execution
+  - Value: 'hello\nhello\nhello\nhello\nhello\n'
+
+---
+
+### 2. Intro to Printing - 2
+- **ID:** print2
+- **Title:** Intro to Printing - 2
+- **Description:** Print 1 - 10 using a loop
+- **Difficulty:** Intermediate
+- **Estimated Time:** 60 min
+- **XP Reward:** 150
+- **Max Blocks:** 6
+- **Success Criteria:**
+  - Type: execution
+  - Value: '1\n2\n3\n4\n5\n6\n7\n8\n9\n10'
+
+---
+
+### 3. Intro to Printing - 3
+- **ID:** prime100
+- **Title:** Intro to Printing - 3
+- **Description:** Print the prime numbers from 2 - 100
+- **Difficulty:** Advanced
+- **Estimated Time:** 90 min
+- **XP Reward:** 200
+- **Max Blocks:** 20
+- **Success Criteria:**
+  - Type: execution
+  - Value: '2\n3\n5\n7\n11\n13\n17\n19\n23\n29\n31\n37\n41\n43\n47\n53\n59\n61\n67\n71\n73\n79\n83\n89\n97\n'
+
+---
+
+### 4. Fizzbuzz Challenge
+- **ID:** fizzbuzz
+- **Title:** Fizzbuzz Challenge
+- **Description:** Print the numbers 1 - 100. If the number is divisible by 3, replace it with 'fizz'. If the number is divisible by 5, replace it with 'buzz'. If the number is divisible by 3 and 5, replace it with 'fizzbuzz'. Do this in 35 or fewer blocks
+- **Difficulty:** Advanced
+- **Estimated Time:** 120 min
+- **XP Reward:** 200
+- **Max Blocks:** 35
+- **Success Criteria:**
+  - Type: execution
+  - Value: (see challengeService.ts for full output)
+
+---
+
+## Notes
+- For full output values and additional challenge logic, see `src/services/challengeService.ts`.
+- This file is auto-generated from the challenge definitions in the codebase.

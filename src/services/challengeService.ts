@@ -97,14 +97,14 @@ export const challenges: Challenge[] = [
   {
     id: "print2",
     title: "Intro to Printing - 2",
-    description: "Print 1 - 5 using a loop",
+    description: "Print 1 - 10 using a loop",
     difficulty: "Intermediate",
     estimatedTime: "60 min",
     xpReward: 150,
-    maxBlocks: 3,
+    maxBlocks: 6,
     successCriteria: {
       type: "execution",
-      value: '1\n2\n3\n4\n5\n'
+      value: '1\n2\n3\n4\n5\n6\n7\n8\n9\n10'
     }
   },
   {
@@ -119,6 +119,19 @@ export const challenges: Challenge[] = [
       type: "execution",
       value: '\n' +
       '2\\n3\\n5\\n7\\n11\\n13\\n17\\n19\\n23\\n29\\n31\\n37\\n41\\n43\\n47\\n53\\n59\\n61\\n67\\n71\\n73\\n79\\n83\\n89\\n97\\n'
+    }
+  },
+  {
+    id : "fizzbuzz",
+    title: "Fizzbuzz Challenge",
+    description: "Print the numbers 1 - 100. If the number is divisible by 3, replace it with 'fizz'. If the number is divisible by 5, replace it with 'buzz'. If the number is divisible by 3 and 5, replace it with 'fizzbuzz'. Do this in 35 or fewer blocks",
+    difficulty: "Advanced",
+    estimatedTime: "120 min",
+    xpReward: 200,
+    maxBlocks: 35,
+    successCriteria: {
+      type: "execution",
+      value: '1\n2\nfizz\n4\nbuzz\nfizz\n7\n8\nfizz\nbuzz\n11\nfizz\n13\n14\nfizzbuzz\n16\n17\nfizz\n19\nbuzz\nfizz\n22\n23\nfizz\nbuzz\n26\nfizz\n28\n29\nfizzbuzz\n31\n32\nfizz\n34\nbuzz\nfizz\n37\n38\nfizz\nbuzz\n41\nfizz\n43\n44\nfizzbuzz\n46\n47\nfizz\n49\nbuzz\nfizz\n52\n53\nfizz\nbuzz\n56\nfizz\n58\n59\nfizzbuzz\n61\n62\nfizz\n64\nbuzz\nfizz\n67\n68\nfizz\nbuzz\n71\nfizz\n73\n74\nfizzbuzz\n76\n77\nfizz\n79\nbuzz\nfizz\n82\n83\nfizz\nbuzz\n86\nfizz\n88\n89\nfizzbuzz\n91\n92\nfizz\n94\nbuzz\nfizz\n97\n98\nfizz\nbuzz\n'
     }
   }
 ];
