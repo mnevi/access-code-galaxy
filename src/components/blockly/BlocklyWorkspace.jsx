@@ -176,19 +176,19 @@ const BlocklyWorkspace = () => {
       });
 
       const data = await response.json();
-      setOutput(data.output);
+      // Normalize output to match challengeService logic
+      const normalize = (s) => (typeof s === 'string' ? s.replace(/\r\n/g, '\n').trim() : '');
+      const actual = normalize(data.output);
+      setOutput(actual);
 
       // evaluate challenge after output is set
-      evaluateWorkspace(workspaceRef.current, data.output);
+      evaluateWorkspace(workspaceRef.current, actual);
 
       // if freeplay mode, skip challenge validation
       if (challengeId === 'freeplay' || !challenge || challenge.goalOutput === null) {
         return;
       }
 
-      // challenge mode: check correctness seperately
-      const normalize = (s) => s.replace(/\r\n/g, '\n').trim();
-      const actual = normalize(data.output);
       const expected = normalize(challenge.goalOutput);
 
       if (actual === expected) {
