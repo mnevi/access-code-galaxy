@@ -1,73 +1,109 @@
-# Welcome to your Lovable project
 
-## Project info
+# Access Code
 
-**URL**: https://lovable.dev/projects/122456ea-5ae1-4bcc-8e18-5e91b531f5d9
+An accessible, gamified coding challenge platform designed for neurodivergent, visually impaired, hearing impaired, and motor-impaired learners. Built with React, Supabase, Flask, and Blockly.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- 🧠 Neurodivergent Mode: Customizable pacing, gentle feedback, and focus/break timers
+- 🦻 Hearing Impairment Mode: Visual feedback, captions, and vibration alerts
+- 👁️ Visual Impairment Mode: Screen reader support, high contrast, keyboard navigation
+- 🦾 Motor Impairment Mode: Voice commands, large controls, switch navigation
+- 🧩 Blockly-based visual coding workspace
+- Real-time challenge progress and XP tracking (Supabase)
+- Gamified XP, streaks, and rewards
+- Accessible UI with modern design
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/122456ea-5ae1-4bcc-8e18-5e91b531f5d9) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## Tech Stack
 
-**Use your preferred IDE**
+- **Frontend:** React, TypeScript, Tailwind CSS, Vite
+- **Backend:** Flask (Python), Supabase (Postgres)
+- **Blockly:** Visual programming interface
+- **Authentication & DB:** Supabase
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Getting Started
 
-Follow these steps:
+### Prerequisites
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- Node.js (v18+ recommended)
+- Python 3.8+
+- Supabase project (see below)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Backend Setup
 
-# Step 3: Install the necessary dependencies.
-npm i
+1. Install Python dependencies:
+   ```sh
+   cd src/backend
+   pip install -r requirements.txt
+   ```
+2. Set your Supabase service role key as an environment variable:
+   ```sh
+   # On Windows (PowerShell)
+   $env:SUPABASE_KEY="your-supabase-service-role-key"
+   # On macOS/Linux
+   export SUPABASE_KEY="your-supabase-service-role-key"
+   ```
+3. Start the Flask backend:
+   ```sh
+   python app.py
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### Frontend Setup
 
-**Edit a file directly in GitHub**
+1. In a new terminal, install Node dependencies:
+   ```sh
+   npm install
+   ```
+2. Build and start the frontend:
+   ```sh
+   npm run build
+   npm run dev
+   ```
+3. Open your browser to `http://localhost:5173` (or the port shown in the terminal).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## Usage
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Sign up or log in (Supabase Auth)
+- Select an accessibility mode (Neurodivergent, Visual, Hearing, Motor)
+- Complete coding challenges in the Blockly workspace
+- Track your XP, streaks, and progress
+- Use settings dialogs to customize your experience
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## Accessibility
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+This project is designed with accessibility as a first-class priority. All modes are tested for:
 
-## How can I deploy this project?
+- Keyboard navigation
+- Screen reader compatibility
+- Color contrast and font size
+- Voice and audio feedback
+- Customizable UI for neurodivergent users
 
-Simply open [Lovable](https://lovable.dev/projects/122456ea-5ae1-4bcc-8e18-5e91b531f5d9) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## Contributing
 
-Yes, you can!
+Contributions are welcome! To contribute:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/your-feature`)
+3. Commit your changes
+4. Open a pull request
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Please follow the code style and accessibility guidelines.
+
+---
+
+## Credits
+
+Written by Max Neville and Zachary Pines
