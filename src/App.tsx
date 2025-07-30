@@ -7,7 +7,6 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile"
 import NotFound from "./pages/NotFound";
-import Challenge from "./pages/Challenge";
 import ChallengeSelection from "./pages/ChallengeSelection";
 import ChallengeWithBlockly from './pages/ChallengeWithBlockly';
 
@@ -23,7 +22,7 @@ const App = () => (
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/challenge" element={<Challenge />} />
+        <Route path="/challenge" element={<ChallengeWithBlockly />} />
         <Route path="/challenge-selection" element={<ChallengeSelection />} />
         <Route path="/blockly/:challengeId" element={<ChallengeWithBlockly />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

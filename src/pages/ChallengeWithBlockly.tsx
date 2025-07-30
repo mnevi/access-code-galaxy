@@ -15,6 +15,7 @@ const ChallengeWithBlockly: React.FC = () => {
   const { challengeId = "html-basics" } = useParams();
   const [challenge, setChallenge] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [attempts, setAttempts] = useState(0);
 
@@ -37,10 +38,26 @@ const ChallengeWithBlockly: React.FC = () => {
     }
   }, [challengeId, isActive, settings.textToSpeechEnabled, settings.audioCuesEnabled]);
 
-  const handleProgressUpdate = (newProgress: number) => {
+  const handleProgressUpdate = async (newProgress: number, completed: boolean) => {
+    console.log('[handleProgressUpdate] newProgress:', newProgress, 'completed:', completed);
     setProgress(newProgress);
+    setIsCompleted(completed);
+    // Persist progress to backend
+    const userId = localStorage.getItem('userId');
+    if (userId && challenge) {
+      try {
+        await ChallengeService.updateChallengeProgress(
+          userId,
+          challenge.id,
+          newProgress,
+          completed
+        );
+      } catch (err) {
+        console.error('Failed to update challenge progress:', err);
+      }
+    }
     if (isActive && settings.celebrateProgress) {
-      if (newProgress === 100) {
+      if (completed) {
         playAudioCue("success");
         if (settings.textToSpeechEnabled) speak("Congratulations! Challenge completed successfully!");
       } else if (newProgress > progress && newProgress % 25 === 0) {
@@ -81,6 +98,7 @@ const ChallengeWithBlockly: React.FC = () => {
     );
   }
 
+  console.log('[render] progress state:', progress);
   return (
     <div className={`flex flex-col min-h-screen ${isActive ? "neurodivergent-mode" : ""} ${showSettings ? "overflow-hidden" : ""}`}>
       {/* Break Mode Overlay */}
@@ -173,6 +191,8 @@ const ChallengeWithBlockly: React.FC = () => {
             onProgressUpdate={handleProgressUpdate}
             onError={handleError}
             neurodivergentMode={isActive ? settings : null}
+            progress={progress}
+            isCompleted={isCompleted}
           />
         </div>
       </div>

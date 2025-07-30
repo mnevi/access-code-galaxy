@@ -1,4 +1,8 @@
-import { useState, useEffect } from 'react';
+// Written by Max Neville
+// Sign-in Page with SQLite integration
+
+
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,146 +10,100 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Code, Sparkles, Eye, EyeOff } from 'lucide-react';
-import type { User, Session } from '@supabase/supabase-js';
 
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
   // Form states
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Email/password are no longer used, but keep state for possible future use
+  // const [email, setEmail] = useState('');
+  // const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
 
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Redirect authenticated users to home
-        if (session?.user) {
-          navigate('/');
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // Redirect if already authenticated
-      if (session?.user) {
-        navigate('/');
-      }
+  // Helper: generate UUID (for demo, use crypto.randomUUID if available)
+  const generateUUID = () => {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+    // fallback for older browsers
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
     });
+  };
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
+  // Sign Up: create user in backend and set localStorage userId
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            display_name: displayName,
-            username: username
-          }
-        }
-      });
-
-      if (error) {
-        if (error.message.includes('already registered')) {
-          toast({
-            title: "Account exists",
-            description: "This email is already registered. Please sign in instead.",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Signup failed",
-            description: error.message,
-            variant: "destructive"
-          });
-        }
-      } else {
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
-        });
+      if (!username || !displayName) {
+        toast({ title: 'Missing fields', description: 'Username and display name are required.', variant: 'destructive' });
+        setLoading(false);
+        return;
       }
-    } catch (error: any) {
-      toast({
-        title: "Signup failed",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive"
+      // Check if user already exists (by username)
+      const res = await fetch(`/api/profile/username/${encodeURIComponent(username)}`);
+      if (res.ok) {
+        toast({ title: 'Account exists', description: 'This username is already taken. Please sign in or choose another.', variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+      // Create new user
+      const userId = generateUUID();
+      const upsertRes = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: userId,
+          username,
+          display_name: displayName,
+          avatar_url: '',
+          accessibility_mode: '',
+        }),
       });
+      if (!upsertRes.ok) throw new Error('Failed to create user');
+      localStorage.setItem('userId', userId);
+      toast({ title: 'Account created!', description: 'You are signed up and signed in.' });
+      navigate('/');
+    } catch (error: any) {
+      toast({ title: 'Signup failed', description: error.message || 'An unexpected error occurred', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
+  // Sign In: look up user by username, set localStorage userId
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast({
-            title: "Invalid credentials",
-            description: "Please check your email and password and try again.",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Sign in failed",
-            description: error.message,
-            variant: "destructive"
-          });
-        }
-      } else {
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-        });
-        // Navigation will be handled by the auth state change listener
+      if (!username) {
+        toast({ title: 'Missing username', description: 'Please enter your username.', variant: 'destructive' });
+        setLoading(false);
+        return;
       }
+      const res = await fetch(`/api/profile/username/${encodeURIComponent(username)}`);
+      if (!res.ok) {
+        toast({ title: 'User not found', description: 'No account found with that username.', variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+      const profile = await res.json();
+      localStorage.setItem('userId', profile.id);
+      toast({ title: 'Welcome back!', description: 'You have successfully signed in.' });
+      navigate('/');
     } catch (error: any) {
-      toast({
-        title: "Sign in failed",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive"
-      });
+      toast({ title: 'Sign in failed', description: error.message || 'An unexpected error occurred', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
+  // HTML
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -184,41 +142,15 @@ const Auth = () => {
               <TabsContent value="signin" className="space-y-4">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-username">Username</Label>
                     <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      id="signin-username"
+                      type="text"
+                      placeholder="Enter your username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
                       required
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="signin-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
                   </div>
                   <Button 
                     type="submit" 
@@ -233,42 +165,15 @@ const Auth = () => {
               <TabsContent value="signup" className="space-y-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-username">Username</Label>
                     <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      id="signup-username"
+                      type="text"
+                      placeholder="Choose a username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
                       required
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="signup-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Create a password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        minLength={6}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="display-name">Display Name</Label>
@@ -278,16 +183,7 @@ const Auth = () => {
                       placeholder="Your display name"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      type="text"
-                      placeholder="Choose a username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      required
                     />
                   </div>
                   <Button 

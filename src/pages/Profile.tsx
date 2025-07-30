@@ -1,9 +1,9 @@
+// Created by Max Neville
+// Profile page with database configuration
 
-
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import avatar1 from "@/assets/avatar1.webp";
 import avatar2 from "@/assets/avatar2.webp";
 import avatar3 from "@/assets/avatar3.jpg";
@@ -12,55 +12,93 @@ import avatar4 from "@/assets/avatar4.webp";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const avatarOptions = [avatar1, avatar2, avatar3, avatar4];
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const loadProfileData = async () => {
-      const { data } = await supabase.auth.getUser();
-      const user = data?.user;
-      if (user) {
-        // Load profile data
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("username, display_name, avatar_url, accessibility_mode, xp_points, current_streak")
-          .eq("id", user.id)
-          .single();
-        
-        // Load completed challenges count
-        const { data: completedChallenges } = await supabase
-          .from('challenge_progress')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('completed', true);
+    // Local user account creation for demo purposes.
+    // For production, replace with real authentication/session logic.
+    async function loadProfileData() {
+      setError(null);
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        userId = crypto.randomUUID();
+        localStorage.setItem('userId', userId);
+      }
+      try {
+        // Fetch user profile from Flask backend
+        const res = await fetch(`/api/profile/${userId}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch profile: ${res.status}`);
+        }
+        const profileData = await res.json();
+
+        // Fetch challenge progress and count completed
+        const res2 = await fetch(`/api/progress/${userId}`);
+        if (!res2.ok) {
+          throw new Error(`Failed to fetch progress: ${res2.status}`);
+        }
+        const progressList = await res2.json();
+        const completedChallenges = Array.isArray(progressList)
+          ? progressList.filter((p: any) => p.completed).length
+          : 0;
 
         setProfile({
           ...profileData,
-          completedChallenges: completedChallenges?.length || 0
+          completedChallenges,
         });
+      } catch (err: any) {
+        setError(err.message || 'An unknown error occurred.');
       }
-    };
-
+    }
     loadProfileData();
   }, []);
-
+  
+  // error handling
   const handleSaveAvatar = async () => {
     if (!selectedAvatar || !profile) return;
     setIsSaving(true);
-    // Update profile with selected avatar
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ avatar_url: selectedAvatar })
-      .eq('username', profile.username);
-    if (updateError) {
-      alert('Failed to update profile');
-    } else {
-      setProfile({ ...profile, avatar_url: selectedAvatar });
-      setSelectedAvatar(null);
+    setError(null);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: profile.id,
+          username: profile.username,
+          display_name: profile.display_name,
+          avatar_url: selectedAvatar,
+          accessibility_mode: profile.accessibility_mode,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to update profile: ${res.status}`);
+      }
+      const result = await res.json();
+      if (result.status !== 'profile upserted') {
+        throw new Error('Failed to update profile');
+      } else {
+        setProfile({ ...profile, avatar_url: selectedAvatar });
+        setSelectedAvatar(null);
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unknown error occurred.');
     }
     setIsSaving(false);
   };
+
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen text-red-600">
+        <div className="mb-4 font-bold text-lg">Error</div>
+        <div className="mb-4">{error}</div>
+        <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
+  }
 
   if (!profile) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -122,17 +160,60 @@ const Profile = () => {
         <div className="flex flex-col gap-6">
           <div>
             <label className="block text-sm font-medium mb-2">Accessibility Mode</label>
-            <input
-              type="text"
+            <select
               className="w-full border rounded px-4 py-2 bg-background"
-              value={profile.accessibility_mode || ""}
-              readOnly
-            />
+              value={profile._pending_accessibility_mode ?? profile.accessibility_mode ?? "none"}
+              onChange={e => {
+                const newMode = e.target.value;
+                setProfile({ ...profile, _pending_accessibility_mode: newMode });
+              }}
+              disabled={isSaving}
+            >
+              <option value="none">None</option>
+              <option value="neurodivergent">Neurodivergent</option>
+              <option value="visual">Visual Impairment</option>
+              <option value="hearing">Hearing Impairment</option>
+              <option value="motor">Motor Impairment</option>
+            </select>
           </div>
           {/* Add more settings fields here as needed */}
         </div>
       </div>
-      <Button className="w-full" variant="outline">Edit Profile</Button>
+      <Button
+        className="w-full"
+        variant="outline"
+        disabled={
+          isSaving ||
+          (profile._pending_accessibility_mode === undefined || profile._pending_accessibility_mode === profile.accessibility_mode)
+        }
+        onClick={async () => {
+          if (!profile._pending_accessibility_mode || profile._pending_accessibility_mode === profile.accessibility_mode) return;
+          setIsSaving(true);
+          setError(null);
+          try {
+            const res = await fetch('/api/profile', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: profile.id,
+                username: profile.username,
+                display_name: profile.display_name,
+                avatar_url: profile.avatar_url,
+                accessibility_mode: profile._pending_accessibility_mode,
+              }),
+            });
+            if (!res.ok) throw new Error(`Failed to update profile: ${res.status}`);
+            const result = await res.json();
+            if (result.status !== 'profile upserted') throw new Error('Failed to update profile');
+            setProfile({ ...profile, accessibility_mode: profile._pending_accessibility_mode, _pending_accessibility_mode: undefined });
+          } catch (err: any) {
+            setError(err.message || 'An unknown error occurred.');
+          }
+          setIsSaving(false);
+        }}
+      >
+        {isSaving ? 'Saving...' : 'Confirm Mode Change'}
+      </Button>
       </div>
     </div>
   );

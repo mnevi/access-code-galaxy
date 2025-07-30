@@ -1,29 +1,28 @@
+// Page Header
+
 import { useEffect, useState } from "react";
-import { Code, Accessibility } from "lucide-react";
+import { Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { supabase } from "@/integrations/supabase/client";
 
 
 const Header = () => {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data?.user || null);
-    });
-  }, []);
-  useEffect(() => {
-    if (user) {
-      supabase
-        .from("profiles")
-        .select("username, avatar_url")
-        .eq("id", user.id)
-        .single()
-        .then(({ data }) => setProfile(data));
+    const storedUserId = localStorage.getItem('userId');
+    setUserId(storedUserId);
+    if (storedUserId) {
+      fetch(`/api/profile/${storedUserId}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => setProfile(data))
+        .catch(() => setProfile(null));
+    } else {
+      setProfile(null);
     }
-  }, [user]);
+  }, []);
 
   return (
     <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
@@ -51,7 +50,7 @@ const Header = () => {
           </a>
         </nav>
         <div className="flex items-center space-x-3">
-          {user && profile ? (
+          {userId && profile ? (
             <Popover>
               <PopoverTrigger asChild>
                 <Avatar>
@@ -66,8 +65,8 @@ const Header = () => {
                     <AvatarFallback>{profile.username?.charAt(0) ?? "U"}</AvatarFallback>
                   </Avatar>
                   <span className="font-semibold text-lg">{profile.username}</span>
-                  <Button className="mt-4 w-full" variant="outline" onClick={async () => {
-                    await supabase.auth.signOut();
+                  <Button className="mt-4 w-full" variant="outline" onClick={() => {
+                    localStorage.removeItem('userId');
                     window.location.reload();
                   }}>
                     Sign Out

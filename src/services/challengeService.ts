@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+
 
 export interface Challenge {
   id: string;
@@ -138,81 +138,55 @@ export const challenges: Challenge[] = [
 
 export class ChallengeService {
   static async getUserChallengeProgress(userId: string): Promise<ChallengeProgress[]> {
-    const { data, error } = await supabase
-      .from('challenge_progress')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (error) {
+    try {
+      const res = await fetch(`/api/progress/${userId}`);
+      if (!res.ok) throw new Error('Failed to fetch challenge progress');
+      const data = await res.json();
+      return data;
+    } catch (error) {
       console.error('Error fetching challenge progress:', error);
       return [];
     }
-
-    return data || [];
   }
 
   static async updateChallengeProgress(
     userId: string,
     challengeId: string,
     progress: number,
-    completed: boolean = false
+    completed: boolean = false,
+    xpEarnedOverride?: number
   ): Promise<ChallengeProgress | null> {
     const challenge = challenges.find(c => c.id === challengeId);
     if (!challenge) return null;
 
-    const xpEarned = completed ? challenge.xpReward : Math.floor((progress / 100) * challenge.xpReward);
-    
-    const { data, error } = await supabase
-      .from('challenge_progress')
-      .upsert({
-        user_id: userId,
-        challenge_id: challengeId,
-        progress,
-        completed,
-        xp_earned: xpEarned,
-        completed_at: completed ? new Date().toISOString() : null
-      }, {
-        onConflict: 'user_id,challenge_id'
-      })
-      .select()
-      .single();
+    const xpEarned = typeof xpEarnedOverride === 'number'
+      ? xpEarnedOverride
+      : (completed ? challenge.xpReward : Math.floor((progress / 100) * challenge.xpReward));
 
-    if (error) {
+    try {
+      const res = await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          challenge_id: challengeId,
+          progress,
+          completed,
+          xp_earned: xpEarned,
+          completed_at: completed ? new Date().toISOString() : null
+        })
+      });
+      if (!res.ok) throw new Error('Failed to update challenge progress');
+      // Optionally, fetch the updated progress
+      const updated = await this.getUserChallengeProgress(userId);
+      return updated.find(p => p.challenge_id === challengeId) || null;
+    } catch (error) {
       console.error('Error updating challenge progress:', error);
       return null;
     }
-
-    // Update user's total XP and streak if challenge completed
-    if (completed) {
-      await this.updateUserStats(userId, xpEarned);
-    }
-
-    return data;
   }
 
-  static async updateUserStats(userId: string, xpEarned: number): Promise<void> {
-    // Get current profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('xp_points, current_streak')
-      .eq('id', userId)
-      .single();
-
-    if (!profile) return;
-
-    // Update XP and increment streak
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        xp_points: (profile.xp_points || 0) + xpEarned,
-        current_streak: (profile.current_streak || 0) + 1
-      })
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error updating user stats:', error);
-    }
-  }
+  // No longer needed: updateUserStats handled by backend when progress is completed
 
 static evaluateWorkspace(workspace: any, challengeId: string, output?: string): { progress: number, completed: boolean } {
     const challenge = challenges.find(c => c.id === challengeId);

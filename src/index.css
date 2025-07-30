@@ -482,6 +482,11 @@ All colors MUST be HSL for accessibility and theming.
     animation: pulse-glow 2s infinite;
   }
 
+  /* Text for Footer */
+  .text2 {
+    color: #6b83d7;
+  }
+
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.2); }
     50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.4); }

@@ -1,4 +1,5 @@
 // Written by Max Neville
+// Main AccessCode page
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import AccessibilityModeCard from "@/components/AccessibilityModeCard";
 import ChallengeCard from "@/components/ChallengeCard";
 import StatsCard from "@/components/StatsCard";
 import { ChallengeService } from "@/services/challengeService";
-import { supabase } from "@/integrations/supabase/client";
 import { useAccessibility, accessibilityModes } from "@/contexts/AccessibilityContext";
 import { useNeurodivergentMode } from "@/hooks/useNeurodivergentMode";
 import { useHearingImpairmentMode } from "@/hooks/useHearingImpairmentMode";
@@ -42,6 +42,8 @@ const Index = () => {
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [challenges, setChallenges] = useState([]);
   const [userStats, setUserStats] = useState({ xpPoints: 0, challengesCompleted: 0, currentStreak: 0 });
+  const [userId, setUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showHearingSettings, setShowHearingSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
@@ -52,6 +54,7 @@ const Index = () => {
 
   const navigate = useNavigate(); // for navigation purposes
 
+  // Overview of four diferent accessibility options with tailored experiences
   const uiAccessibilityModes = [
     {
       id: "neurodivergent",
@@ -119,105 +122,39 @@ const Index = () => {
   };
 
   useEffect(() => {
+    const storedUserId = localStorage.getItem('userId');
+    setUserId(storedUserId);
     const loadUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Load challenges with progress
-        const challengesWithProgress = await ChallengeService.getChallengesWithProgress(user.id);
-        setChallenges(challengesWithProgress);
+      if (storedUserId) {
+        try {
+          // Fetch profile
+          const resProfile = await fetch(`/api/profile/${storedUserId}`);
+          if (!resProfile.ok) throw new Error('Failed to fetch profile');
+          const profile = await resProfile.json();
+          setUsername(profile.username || null);
 
-        // Load user stats
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('xp_points, current_streak')
-          .eq('id', user.id)
-          .single();
+          // Fetch progress
+          const resProgress = await fetch(`/api/progress/${storedUserId}`);
+          if (!resProgress.ok) throw new Error('Failed to fetch progress');
+          const progressList = await resProgress.json();
 
-        if (profile) {
-          const { data: completedChallenges } = await supabase
-            .from('challenge_progress')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('completed', true);
+          // Count completed challenges
+          const completedChallenges = Array.isArray(progressList)
+            ? progressList.filter((p) => p.completed).length
+            : 0;
 
           setUserStats({
             xpPoints: profile.xp_points || 0,
-            challengesCompleted: completedChallenges?.length || 0,
+            challengesCompleted: completedChallenges,
             currentStreak: profile.current_streak || 0
           });
+        } catch (err) {
+          console.error('Failed to load user data:', err);
         }
-      } else {
-        // Load default challenges for non-authenticated users
-        setChallenges([
-          {
-            title: "HTML Basics",
-            description: "Learn the fundamental building blocks of web development",
-            difficulty: "Beginner" as const,
-            estimatedTime: "45 min",
-            progress: 0,
-            xpReward: 100,
-            isCompleted: false,
-            isLocked: false
-          },
-          {
-            title: "CSS Styling",
-            description: "Master the art of styling web pages with CSS",
-            difficulty: "Beginner" as const,
-            estimatedTime: "60 min",
-            progress: 0,
-            xpReward: 150,
-            isCompleted: false,
-            isLocked: false
-          },
-          {
-            title: "JavaScript Functions",
-            description: "Dive into programming logic with JavaScript",
-            difficulty: "Intermediate" as const,
-            estimatedTime: "90 min",
-            progress: 0,
-            xpReward: 200,
-            isCompleted: false,
-            isLocked: true
-          }
-        ]);
       }
     };
-
     loadUserData();
   }, []);
-
-  const staticChallenges = [
-    {
-      title: "HTML Basics",
-      description: "Learn the fundamental building blocks of web development",
-      difficulty: "Beginner" as const,
-      estimatedTime: "45 min",
-      progress: 75,
-      xpReward: 100,
-      isCompleted: false,
-      isLocked: false
-    },
-    {
-      title: "CSS Styling",
-      description: "Master the art of styling web pages with CSS",
-      difficulty: "Beginner" as const,
-      estimatedTime: "60 min",
-      progress: 0,
-      xpReward: 150,
-      isCompleted: false,
-      isLocked: false
-    },
-    {
-      title: "JavaScript Functions",
-      description: "Dive into programming logic with JavaScript",
-      difficulty: "Intermediate" as const,
-      estimatedTime: "90 min",
-      progress: 0,
-      xpReward: 200,
-      isCompleted: false,
-      isLocked: true
-    }
-  ];
 
   return (
     <div className={`min-h-screen bg-background ${showSettings ? 'overflow-hidden' : ''}`}>

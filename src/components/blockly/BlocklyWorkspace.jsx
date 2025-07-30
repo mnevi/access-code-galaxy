@@ -19,16 +19,21 @@ import { useParams } from 'react-router-dom';
 // challenge parameters
 import { challenges } from "../../services/challengeService";
 
-const BlocklyWorkspace = () => {
-
-  // load challenge data
+const BlocklyWorkspace = (props) => {
+  // DEBUG: Log props and onProgressUpdate
+  console.log('[BlocklyWorkspace] props:', props);
+  console.log('[BlocklyWorkspace] onProgressUpdate:', typeof props.onProgressUpdate);
   const { challengeId } = useParams();
   const challenge = Array.isArray(challenges)
     ? challenges.find(c => c.id === challengeId)
     : challenges[challengeId];
 
   const blocklyDiv = useRef(null);
-  const { currentProgress, isCompleted, isEvaluating, evaluateWorkspace } = useChallengeProgress(challengeId);
+  const { currentProgress, isCompleted: hookIsCompleted, isEvaluating, evaluateWorkspace } = useChallengeProgress(challengeId);
+
+  // Use parent state if provided, else fallback to hook
+  const progress = typeof props.progress === 'number' ? props.progress : currentProgress;
+  const isCompleted = typeof props.isCompleted === 'boolean' ? props.isCompleted : hookIsCompleted;
   const { currentMode, features } = useAccessibility();
   // Define the toolbox XML as a string
   const toolboxXml = `
@@ -58,6 +63,7 @@ const BlocklyWorkspace = () => {
       <category name="Math" colour="#8E5CA6">
         <block type="math_number" />
         <block type="math_arithmetic" />
+        <block type="math_modulo" />
         <block type="math_single" />
         <block type="math_random_int">
           <value name="FROM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
@@ -139,6 +145,7 @@ const BlocklyWorkspace = () => {
     dart: '//',
   };
 
+  // Patch: Call onProgressUpdate with both progress and isCompleted after evaluation
   const handleRun = async () => {
     hapticFeedback.onUIInteraction('button');
 
@@ -169,6 +176,7 @@ const BlocklyWorkspace = () => {
     hapticFeedback.onWorkspaceAction('run');
 
     try {
+      // Call backend code execution endpoint (not /api/progress)
       const response = await fetch('http://localhost:5000/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -181,8 +189,16 @@ const BlocklyWorkspace = () => {
       const actual = normalize(data.output);
       setOutput(actual);
 
-      // evaluate challenge after output is set
-      evaluateWorkspace(workspaceRef.current, actual);
+      // Evaluate challenge after output is set
+      const evalResult = ChallengeService.evaluateWorkspace(workspaceRef.current, challengeId, actual);
+      if (typeof props.onProgressUpdate === 'function') {
+        const progressValue = evalResult.completed ? 100 : evalResult.progress || 0;
+        const completedValue = !!evalResult.completed;
+        console.log('[BlocklyWorkspace] Calling onProgressUpdate with:', progressValue, completedValue);
+        props.onProgressUpdate(progressValue, completedValue);
+      } else {
+        console.warn('[BlocklyWorkspace] onProgressUpdate is not a function');
+      }
 
       // if freeplay mode, skip challenge validation
       if (challengeId === 'freeplay' || !challenge || challenge.goalOutput === null) {
@@ -476,16 +492,16 @@ const generators = {
   
   // Announce progress changes
   useEffect(() => {
-    if (features.screenReader && currentProgress > 0) {
-      screenReader.announceProgress(currentProgress, challenge?.title);
+    if (features.screenReader && progress > 0) {
+      screenReader.announceProgress(progress, challenge?.title);
     }
     if (features.audioDescriptions && isAudioEnabled) {
-      audioDescriptions.describeProgress(currentProgress, isCompleted);
+      audioDescriptions.describeProgress(progress, isCompleted);
     }
     if (features.tactileFeedback) {
-      hapticFeedback.onProgressUpdate(isCompleted, currentProgress % 25 === 0 && currentProgress > 0);
+      hapticFeedback.onProgressUpdate(isCompleted, progress % 25 === 0 && progress > 0);
     }
-  }, [currentProgress, isCompleted, features, screenReader, audioDescriptions, hapticFeedback, challenge, isAudioEnabled]);
+  }, [progress, isCompleted, features, screenReader, audioDescriptions, hapticFeedback, challenge, isAudioEnabled]);
 
   return (
       <div className={`container ${currentMode ? `mode-${currentMode.id}` : ''} ${features.reducedMotion ? 'reduced-motion' : ''}`}>
@@ -498,10 +514,10 @@ const generators = {
                 <div className="progress-bar">
                   <div 
                     className="progress-fill" 
-                    style={{ width: `${currentProgress}%` }}
+                    style={{ width: `${progress}%` }}
                   ></div>
                 </div>
-                <span>{Math.round(currentProgress)}% Complete</span>
+                {console.log('RENDER isCompleted:', isCompleted)}
                 {isCompleted && <span className="completed-badge">✅ Completed!</span>}
               </div>
             )}
